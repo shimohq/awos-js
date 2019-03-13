@@ -3,6 +3,8 @@ AWOS-JS: Wrapper For OSS And AWS(MINIO)
 
 [![](https://img.shields.io/badge/version-1.0.0-brightgreen.svg)](https://github.com/shimohq/awos-js)
 
+awos for golang:  https://github.com/shimohq/awos
+
 ## feat
 
 - same usage and methods for aws & oss, pretty convenient!
