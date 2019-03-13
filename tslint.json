@@ -1,0 +1,25 @@
+{
+  "extends": [
+    "tslint:latest",
+    "tslint-config-prettier"
+  ],
+  "rules": {
+    "variable-name": [
+      true,
+      "ban-keywords",
+      "check-format",
+      "allow-leading-underscore",
+      "allow-pascal-case"
+    ],
+    "no-empty": false,
+    "ordered-imports": false,
+    "object-literal-sort-keys": false,
+    "no-console": false,
+    "no-var-requires": false,
+    "prefer-object-spread": false,
+
+    "no-implicit-dependencies": false,
+    "no-submodule-imports": false,
+    "max-classes-per-file": true
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "name": "awos-js",
+  "version": "1.0.0",
+  "description": "AWOS: Wrapper For OSS And AWS(MINIO) SDK",
+  "main": "./lib/index.js",
+  "typings": "./lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "clean": "rimraf lib",
+    "format": "prettier --write \"{src,__tests__}/**/*.ts\" --single-quote --trailing-comma es5",
+    "lint": "tslint --force --format verbose \"src/**/*.ts\"",
+    "prebuild": "npm run clean && npm run format && npm run lint && echo Using TypeScript && tsc --version",
+    "prepublish": "npm run build",
+    "build": "tsc",
+    "test": "jest"
+  },
+  "jest": {
+    "roots": [
+      "<rootDir>/src"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "transform": {
+      ".(ts)": "ts-jest"
+    },
+    "testRegex": "__tests__/.*\\.spec\\.ts$",
+    "testEnvironment": "node",
+    "globals": {
+      "ts-jest": {
+        "diagnostics": false
+      }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shimohq/awos-js"
+  },
+  "keywords": [
+    "oss",
+    "aws",
+    "minio"
+  ],
+  "author": "nEoYe",
+  "license": "ISC",
+  "dependencies": {
+    "ali-oss": "^6.1.0",
+    "assert": "^1.4.1",
+    "async-retry": "^1.2.3",
+    "aws-sdk": "^2.412.0",
+    "lodash": "^4.17.11",
+    "remove": "^0.1.5"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.9",
+    "@types/lodash": "^4.14.122",
+    "@types/node": "^11.10.4",
+    "jest": "^24.1.0",
+    "prettier": "^1.16.4",
+    "rimraf": "^2.6.3",
+    "ts-jest": "^24.0.0",
+    "tslint": "^5.13.1",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.3.3333"
+  }
+}
