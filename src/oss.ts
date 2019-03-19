@@ -151,7 +151,7 @@ export default class OSSClient implements IAWOS {
 
     const query = defaults({}, options);
     if (options && options.maxKeys) {
-      query['max-keys'] = options.maxKeys
+      query['max-keys'] = options.maxKeys;
     }
     const res = await client.list(query);
 
