@@ -16,6 +16,9 @@
     "build": "tsc",
     "test": "jest"
   },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
   "jest": {
     "roots": [
       "<rootDir>"
