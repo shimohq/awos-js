@@ -150,13 +150,16 @@ export default class OSSClient implements IAWOS {
     const client = this.getBucketName(key);
 
     const query = defaults({}, options);
+    if (options && options.maxKeys) {
+      query['max-keys'] = options.maxKeys
+    }
     const res = await client.list(query);
 
     if (res.res.status !== 200) {
       throw Error(`list oss objects error, res:${JSON.stringify(res)}`);
     }
 
-    return res.objects.map((o: any) => o.name);
+    return res.objects ? res.objects.map((o: any) => o.name) : [];
   }
 
   private getBucketName(key: string): any {

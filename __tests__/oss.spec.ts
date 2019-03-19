@@ -41,6 +41,12 @@ it('should listObject() workes fine', async () => {
 
   expect(res.length).toBeGreaterThanOrEqual(1);
   expect(res.length).toBeLessThanOrEqual(5);
+
+  const notExistPrefixRes = await this.oss.listObject(this.key, {
+    prefix: 'test-aaaabbbbccccc',
+    maxKeys: 5,
+  });
+  expect(notExistPrefixRes.length).toBe(0);
 });
 
 afterAll(async () => {

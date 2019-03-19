@@ -71,7 +71,10 @@ head(key: string): Promise<Map<string, string> | null>;
 listObject(key: string, options?: IListObjectOptions): Promise<string[]>;
 ```
 
+### Change Log
 
+- v1.0.1 / 2019-03-19
+  - bug fix: oss listObject() should return [] when options.prefix not exist in the bucket; oss listObject() maxKeys not working
 
 
 
