@@ -1,5 +1,9 @@
 import AWOS, { IOptions } from './awos';
-import { IGetObjectResponse, IListObjectOptions } from './types';
+import {
+  IGetObjectResponse,
+  IListObjectOptions,
+  ISignatureUrlOptions,
+} from './types';
 import { IOSSOptions } from './oss';
 import { IAWSOptions } from './aws';
 
@@ -10,4 +14,5 @@ export {
   IListObjectOptions,
   IOSSOptions,
   IAWSOptions,
+  ISignatureUrlOptions,
 };

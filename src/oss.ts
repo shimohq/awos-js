@@ -1,4 +1,9 @@
-import { IAWOS, IGetObjectResponse, IListObjectOptions } from './types';
+import {
+  IAWOS,
+  IGetObjectResponse,
+  IListObjectOptions,
+  ISignatureUrlOptions,
+} from './types';
 import { defaults } from 'lodash';
 
 const OSS = require('ali-oss');
@@ -160,6 +165,15 @@ export default class OSSClient implements IAWOS {
     }
 
     return res.objects ? res.objects.map((o: any) => o.name) : [];
+  }
+
+  public async signatureUrl(
+    key: string,
+    _options?: ISignatureUrlOptions
+  ): Promise<string | null> {
+    const client = this.getBucketName(key);
+    const options = defaults({}, _options);
+    return client.signatureUrl(key, options);
   }
 
   private getBucketName(key: string): any {

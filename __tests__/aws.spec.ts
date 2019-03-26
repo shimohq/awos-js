@@ -51,6 +51,11 @@ it('should listObject() workes fine', async () => {
   expect(notExistPrefixRes.length).toBe(0);
 });
 
+it('should signatureUrl() workes fine', async () => {
+  const res = await this.aws.signatureUrl(this.key);
+  expect(res).toContain(process.env.ENDPOINT);
+});
+
 afterAll(async () => {
   await this.aws.del(this.key);
 });

@@ -1,5 +1,10 @@
 import AWS = require('aws-sdk');
-import { IAWOS, IGetObjectResponse, IListObjectOptions } from './types';
+import {
+  IAWOS,
+  IGetObjectResponse,
+  IListObjectOptions,
+  ISignatureUrlOptions,
+} from './types';
 import * as _ from 'lodash';
 
 const assert = require('assert');
@@ -220,6 +225,37 @@ export default class AWSClient implements IAWOS {
     });
 
     return result.map(o => o.Key);
+  }
+
+  public async signatureUrl(
+    key: string,
+    _options?: ISignatureUrlOptions
+  ): Promise<string | null> {
+    const bucket = this.getBucketName(key);
+    const params: any = {
+      Bucket: bucket,
+      Key: key,
+    };
+    let operation = 'getObject';
+
+    if (_options) {
+      if (_options.method === 'PUT') {
+        operation = 'putObject';
+      }
+      if (_options.expires) {
+        params.Expires = _options.expires;
+      }
+    }
+
+    const res: string = await new Promise((resolve, reject) => {
+      this.client.getSignedUrl(operation, params, (err, data) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(data);
+      });
+    });
+    return res;
   }
 
   private getBucketName(key: string): string {

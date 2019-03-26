@@ -1,4 +1,9 @@
-import { IAWOS, IGetObjectResponse, IListObjectOptions } from './types';
+import {
+  IAWOS,
+  IGetObjectResponse,
+  IListObjectOptions,
+  ISignatureUrlOptions,
+} from './types';
 import OSS, { IOSSOptions } from './oss';
 import AWS, { IAWSOptions } from './aws';
 
@@ -46,6 +51,13 @@ export default class AWOS implements IAWOS {
 
   public async head(key: string): Promise<Map<string, string> | null> {
     return this.client.head(key);
+  }
+
+  public async signatureUrl(
+    key: string,
+    _options?: ISignatureUrlOptions
+  ): Promise<string | null> {
+    return this.client.signatureUrl(key, _options);
   }
 
   public async listObject(
