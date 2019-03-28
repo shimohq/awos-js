@@ -74,6 +74,12 @@ signatureUrl(key: string, options?: ISignatureUrlOptions): Promise<string | null
 
 ### Change Log
 
+- v1.0.3 / 2019-03-28
+  - put() support contentType params
+
+- v1.0.2 / 2019-03-26
+  - support signatureUrl() operation
+
 - v1.0.1 / 2019-03-19
   - bug fix: oss listObject() should return [] when options.prefix not exist in the bucket; oss listObject() maxKeys not working
 
