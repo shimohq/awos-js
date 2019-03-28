@@ -1,6 +1,7 @@
 export interface IGetObjectResponse {
   content: string;
   meta: Map<string, string>;
+  headers: any;
 }
 
 export interface IListObjectOptions {
@@ -17,7 +18,12 @@ export interface ISignatureUrlOptions {
 
 export interface IAWOS {
   get(key: string, metaKeys: string[]): Promise<IGetObjectResponse | null>;
-  put(key: string, data: string, meta: Map<string, any>): Promise<void>;
+  put(
+    key: string,
+    data: string,
+    meta?: Map<string, any>,
+    contentType?: string
+  ): Promise<void>;
   del(key: string): Promise<void>;
   head(key: string): Promise<Map<string, string> | null>;
   listObject(key: string, options?: IListObjectOptions): Promise<string[]>;

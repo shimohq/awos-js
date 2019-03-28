@@ -102,10 +102,16 @@ export default class AWSClient implements IAWOS {
             meta.set(k, awsResult.Metadata[k]);
           }
         });
+        const headers = {
+          'content-type': awsResult.ContentType,
+          etag: awsResult.ETag,
+          'content-length': awsResult.ContentLength,
+        };
 
         resolve({
           content: awsResult.Body ? awsResult.Body.toString() : '',
           meta,
+          headers,
         });
       });
     });
@@ -114,7 +120,8 @@ export default class AWSClient implements IAWOS {
   public async put(
     key: string,
     data: string,
-    meta: Map<string, any>
+    meta: Map<string, any>,
+    contentType?: string
   ): Promise<void> {
     const bucket = this.getBucketName(key);
 
@@ -128,7 +135,7 @@ export default class AWSClient implements IAWOS {
       Bucket: bucket,
       Key: key,
       Metadata: metaData,
-      ContentType: 'text/plain',
+      ContentType: contentType || 'text/plain',
     };
 
     await retry(

@@ -77,6 +77,7 @@ export default class OSSClient implements IAWOS {
         return {
           content: res.content.toString(),
           meta,
+          headers,
         };
       } else {
         return null;
@@ -92,7 +93,8 @@ export default class OSSClient implements IAWOS {
   public async put(
     key: string,
     data: string,
-    meta: Map<string, any>
+    meta: Map<string, any>,
+    contentType?: string
   ): Promise<void> {
     const client = this.getBucketName(key);
 
@@ -100,12 +102,17 @@ export default class OSSClient implements IAWOS {
     for (const [k, v] of meta) {
       ossMeta[k] = v;
     }
+    const options: any = {
+      meta: ossMeta,
+    };
+
+    if (contentType) {
+      options.mime = contentType;
+    }
 
     await retry(
       async () => {
-        await client.put(key, Buffer.from(data), {
-          meta: ossMeta,
-        });
+        await client.put(key, Buffer.from(data), options);
       },
       {
         retries: 3,

@@ -40,9 +40,10 @@ export default class AWOS implements IAWOS {
   public async put(
     key: string,
     data: string,
-    meta: Map<string, any> = new Map<string, any>()
+    meta: Map<string, any> = new Map<string, any>(),
+    contentType?: string
   ): Promise<void> {
-    return this.client.put(key, data, meta);
+    return this.client.put(key, data, meta, contentType);
   }
 
   public async del(key: string): Promise<void> {
