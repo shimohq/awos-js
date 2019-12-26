@@ -1,7 +1,7 @@
 AWOS-JS: Wrapper For OSS And AWS(MINIO)
 ====
 
-[![](https://img.shields.io/badge/version-1.0.3-brightgreen.svg)](https://github.com/shimohq/awos-js)
+[![](https://img.shields.io/badge/version-1.0.4-brightgreen.svg)](https://github.com/shimohq/awos-js)
 
 awos for golang:  https://github.com/shimohq/awos
 
@@ -65,7 +65,8 @@ the available operation：
 
 ```javascript
 get(key: string, metaKeys?: string[]): Promise<IGetObjectResponse | null>;
-put(key: string, data: string, meta?: Map<string, any>, contentType?: string): Promise<void>;
+getAsBuffer(key: string, metaKeys: string[]): Promise<IGetBufferedObjectResponse | null>;
+put(key: string, data: string | Buffer, meta?: Map<string, any>, contentType?: string): Promise<void>;
 del(key: string): Promise<void>;
 head(key: string): Promise<Map<string, string> | null>;
 listObject(key: string, options?: IListObjectOptions): Promise<string[]>;
@@ -73,6 +74,9 @@ signatureUrl(key: string, options?: ISignatureUrlOptions): Promise<string | null
 ```
 
 ### Change Log
+
+- v1.0.4 / 2019-12-26
+ - support buffer in get and put operation
 
 - v1.0.3 / 2019-03-28
   - put() support contentType params
