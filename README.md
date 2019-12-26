@@ -76,7 +76,7 @@ signatureUrl(key: string, options?: ISignatureUrlOptions): Promise<string | null
 ### Change Log
 
 - v1.0.4 / 2019-12-26
- - support buffer in get and put operation
+  - support buffer in get and put operation
 
 - v1.0.3 / 2019-03-28
   - put() support contentType params
