@@ -3,6 +3,7 @@ import {
   IGetObjectResponse,
   IListObjectOptions,
   ISignatureUrlOptions,
+  IGetBufferedObjectResponse,
 } from './types';
 import { defaults } from 'lodash';
 
@@ -56,6 +57,19 @@ export default class OSSClient implements IAWOS {
     key: string,
     metaKeys: string[]
   ): Promise<IGetObjectResponse | null> {
+    const r = await this.getAsBuffer(key, metaKeys);
+    return r
+      ? {
+          ...r,
+          content: r.content.toString(),
+        }
+      : r;
+  }
+
+  public async getAsBuffer(
+    key: string,
+    metaKeys: string[]
+  ): Promise<IGetBufferedObjectResponse | null> {
     const client = this.getBucketName(key);
 
     try {
@@ -75,7 +89,7 @@ export default class OSSClient implements IAWOS {
         });
 
         return {
-          content: res.content.toString(),
+          content: res.content as Buffer,
           meta,
           headers,
         };
@@ -92,10 +106,12 @@ export default class OSSClient implements IAWOS {
 
   public async put(
     key: string,
-    data: string,
+    data: string | Buffer,
     meta: Map<string, any>,
     contentType?: string
   ): Promise<void> {
+    const buffer =
+      typeof data === 'string' ? Buffer.from(data) : (data as Buffer);
     const client = this.getBucketName(key);
 
     const ossMeta = {};
@@ -112,7 +128,7 @@ export default class OSSClient implements IAWOS {
 
     await retry(
       async () => {
-        await client.put(key, Buffer.from(data), options);
+        await client.put(key, buffer, options);
       },
       {
         retries: 3,

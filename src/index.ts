@@ -1,6 +1,7 @@
 import AWOS, { IOptions } from './awos';
 import {
   IGetObjectResponse,
+  IGetBufferedObjectResponse,
   IListObjectOptions,
   ISignatureUrlOptions,
 } from './types';
@@ -11,6 +12,7 @@ export {
   AWOS as Client,
   IOptions,
   IGetObjectResponse,
+  IGetBufferedObjectResponse,
   IListObjectOptions,
   IOSSOptions,
   IAWSOptions,

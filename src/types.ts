@@ -4,6 +4,12 @@ export interface IGetObjectResponse {
   headers: any;
 }
 
+export interface IGetBufferedObjectResponse {
+  content: Buffer;
+  meta: Map<string, string>;
+  headers: any;
+}
+
 export interface IListObjectOptions {
   prefix?: string;
   marker?: string;
@@ -18,9 +24,13 @@ export interface ISignatureUrlOptions {
 
 export interface IAWOS {
   get(key: string, metaKeys: string[]): Promise<IGetObjectResponse | null>;
+  getAsBuffer(
+    key: string,
+    metaKeys: string[]
+  ): Promise<IGetBufferedObjectResponse | null>;
   put(
     key: string,
-    data: string,
+    data: string | Buffer,
     meta?: Map<string, any>,
     contentType?: string
   ): Promise<void>;

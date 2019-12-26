@@ -4,6 +4,7 @@ import {
   IGetObjectResponse,
   IListObjectOptions,
   ISignatureUrlOptions,
+  IGetBufferedObjectResponse,
 } from './types';
 import * as _ from 'lodash';
 
@@ -75,51 +76,32 @@ export default class AWSClient implements IAWOS {
     key: string,
     metaKeys: string[]
   ): Promise<IGetObjectResponse | null> {
-    const bucket = this.getBucketName(key);
-    const params = {
-      Bucket: bucket,
-      Key: key,
-    };
+    const r = await this._get(key, metaKeys);
 
-    return new Promise((resolve, reject) => {
-      this.client.getObject(params, (err, data) => {
-        if (err) {
-          if (err.statusCode === 404) {
-            return resolve(null);
-          }
-          return reject(err);
+    return r && r.content != null
+      ? {
+          ...r,
+          content: r.content.toString(),
         }
+      : null;
+  }
 
-        const awsResult = data;
+  public async getAsBuffer(
+    key: string,
+    metaKeys: string[]
+  ): Promise<IGetBufferedObjectResponse | null> {
+    const r = await this._get(key, metaKeys);
 
-        if (!awsResult) {
-          return resolve(null);
+    return r && r.content != null
+      ? {
+          ...r,
         }
-
-        const meta = new Map<string, string>();
-        metaKeys.forEach((k: string) => {
-          if (awsResult.Metadata && awsResult.Metadata[k]) {
-            meta.set(k, awsResult.Metadata[k]);
-          }
-        });
-        const headers = {
-          'content-type': awsResult.ContentType,
-          etag: awsResult.ETag,
-          'content-length': awsResult.ContentLength,
-        };
-
-        resolve({
-          content: awsResult.Body ? awsResult.Body.toString() : '',
-          meta,
-          headers,
-        });
-      });
-    });
+      : null;
   }
 
   public async put(
     key: string,
-    data: string,
+    data: string | Buffer,
     meta: Map<string, any>,
     contentType?: string
   ): Promise<void> {
@@ -277,5 +259,55 @@ export default class AWSClient implements IAWOS {
     }
 
     throw Error('key not exist in shards bucket!');
+  }
+
+  private async _get(
+    key: string,
+    metaKeys: string[]
+  ): Promise<{
+    content: Buffer;
+    meta: Map<string, string>;
+    headers: any;
+  } | null> {
+    const bucket = this.getBucketName(key);
+    const params = {
+      Bucket: bucket,
+      Key: key,
+    };
+
+    return new Promise((resolve, reject) => {
+      this.client.getObject(params, (err, data) => {
+        if (err) {
+          if (err.statusCode === 404) {
+            return resolve(null);
+          }
+          return reject(err);
+        }
+
+        const awsResult = data;
+
+        if (!awsResult) {
+          return resolve(null);
+        }
+
+        const meta = new Map<string, string>();
+        metaKeys.forEach((k: string) => {
+          if (awsResult.Metadata && awsResult.Metadata[k]) {
+            meta.set(k, awsResult.Metadata[k]);
+          }
+        });
+        const headers = {
+          'content-type': awsResult.ContentType,
+          etag: awsResult.ETag,
+          'content-length': awsResult.ContentLength,
+        };
+
+        resolve({
+          content: awsResult.Body as Buffer,
+          meta,
+          headers,
+        });
+      });
+    });
   }
 }

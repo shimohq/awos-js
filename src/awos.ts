@@ -3,6 +3,7 @@ import {
   IGetObjectResponse,
   IListObjectOptions,
   ISignatureUrlOptions,
+  IGetBufferedObjectResponse,
 } from './types';
 import OSS, { IOSSOptions } from './oss';
 import AWS, { IAWSOptions } from './aws';
@@ -37,9 +38,16 @@ export default class AWOS implements IAWOS {
     return this.client.get(key, metaKeys);
   }
 
+  public async getAsBuffer(
+    key: string,
+    metaKeys: string[] = []
+  ): Promise<IGetBufferedObjectResponse | null> {
+    return this.client.getAsBuffer(key, metaKeys);
+  }
+
   public async put(
     key: string,
-    data: string,
+    data: string | Buffer,
     meta: Map<string, any> = new Map<string, any>(),
     contentType?: string
   ): Promise<void> {
