@@ -1,7 +1,7 @@
 AWOS-JS: Wrapper For OSS And AWS(MINIO)
 ====
 
-[![](https://img.shields.io/badge/version-1.0.4-brightgreen.svg)](https://github.com/shimohq/awos-js)
+![npm](https://img.shields.io/npm/v/awos-js)
 
 awos for golang:  https://github.com/shimohq/awos
 
