@@ -205,7 +205,7 @@ export default class OSSClient implements IAWOS {
     }
 
     for (const [k, v] of this.clients) {
-      if (k.indexOf(key.slice(-1)) >= 0) {
+      if (k.indexOf(key.slice(-1).toLowerCase()) >= 0) {
         return v;
       }
     }

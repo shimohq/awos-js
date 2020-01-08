@@ -253,7 +253,7 @@ export default class AWSClient implements IAWOS {
     }
 
     for (const [k, v] of this.shardsBucket) {
-      if (k.indexOf(key.slice(-1)) >= 0) {
+      if (k.indexOf(key.slice(-1).toLowerCase()) >= 0) {
         return v;
       }
     }
