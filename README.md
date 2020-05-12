@@ -1,4 +1,4 @@
-AWOS-JS: Wrapper For OSS And AWS(MINIO)
+AWOS-JS: Wrapper For Aliyun OSS And Amazon S3
 ====
 
 ![npm](https://img.shields.io/npm/v/awos-js)
@@ -29,7 +29,7 @@ import AWOS from 'awos-js'
 const AWOS = require('awos-js')
 ```
 
-### for oss
+### for Aliyun OSS
 
 ```javascript
 const client = new AWOS.Client({
@@ -43,7 +43,7 @@ const client = new AWOS.Client({
 })
 ```
 
-### for aws(minio)
+### for Amazon S3(minio)
 
 ```javascript
 const client = new AWOS.Client({
