@@ -20,7 +20,10 @@ it('should put() works fine', async () => {
   const meta = new Map<string, any>();
   meta.set('length', this.content.length);
 
-  await this.oss.put(this.key, this.content, meta, this.contentType);
+  await this.oss.put(this.key, this.content, {
+    meta,
+    contentType: this.contentType,
+  });
 });
 
 it('should put() with headers ok', async () => {
@@ -33,10 +36,14 @@ it('should put() with headers ok', async () => {
   const meta = new Map<string, any>();
   meta.set('length', this.content.length);
 
-  await this.oss.put(key, this.content, meta, 'text/plain', {
-    cacheControl,
-    contentDisposition,
-    contentEncoding,
+  await this.oss.put(key, this.content, {
+    meta,
+    contentType: 'text/plain',
+    headers: {
+      cacheControl,
+      contentDisposition,
+      contentEncoding,
+    },
   });
 
   const signUrl = await this.oss.signatureUrl(key);

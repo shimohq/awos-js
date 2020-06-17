@@ -5,7 +5,7 @@ import {
   IListObjectOptions,
   ISignatureUrlOptions,
   IGetBufferedObjectResponse,
-  IPutObjectHeaders,
+  IPutObjectOptions,
 } from './types';
 import * as _ from 'lodash';
 
@@ -103,14 +103,17 @@ export default class AWSClient implements IAWOS {
   public async put(
     key: string,
     data: string | Buffer,
-    meta: Map<string, any>,
-    contentType?: string,
-    headers?: IPutObjectHeaders
+    options?: IPutObjectOptions
   ): Promise<void> {
     const bucket = this.getBucketName(key);
 
+    const defaultOptions: IPutObjectOptions = {};
+    const _options = options || defaultOptions;
+    const defaultMeta: Map<string, any> = new Map<string, any>();
+    const _meta = _options!.meta || defaultMeta;
+
     const metaData = {};
-    for (const [k, v] of meta) {
+    for (const [k, v] of _meta) {
       metaData[k] = String(v);
     }
 
@@ -119,11 +122,11 @@ export default class AWSClient implements IAWOS {
       Bucket: bucket,
       Key: key,
       Metadata: metaData,
-      ContentType: contentType || 'text/plain',
+      ContentType: _options.contentType || 'text/plain',
     };
 
     // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property
-    const _headers = headers || {};
+    const _headers = _options.headers || {};
     if (_headers.cacheControl) {
       params.CacheControl = _headers.cacheControl;
     }

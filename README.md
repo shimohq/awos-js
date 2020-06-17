@@ -75,7 +75,7 @@ signatureUrl(key: string, options?: ISignatureUrlOptions): Promise<string | null
 
 ## TODO
 
-- [ ] conbine parameters `meta`,`contentType`,`headers` of `put` into `options`
+- [x] conbine parameters `meta`,`contentType`,`headers` of `AWOS.put` into `options`
 
 ### Change Log
 
