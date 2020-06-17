@@ -66,12 +66,16 @@ the available operation：
 ```javascript
 get(key: string, metaKeys?: string[]): Promise<IGetObjectResponse | null>;
 getAsBuffer(key: string, metaKeys: string[]): Promise<IGetBufferedObjectResponse | null>;
-put(key: string, data: string | Buffer, meta?: Map<string, any>, contentType?: string): Promise<void>;
+put(key: string, data: string | Buffer, meta?: Map<string, any>, contentType?: string, headers?: IPutObjectHeaders): Promise<void>;
 del(key: string): Promise<void>;
 head(key: string): Promise<Map<string, string> | null>;
 listObject(key: string, options?: IListObjectOptions): Promise<string[]>;
 signatureUrl(key: string, options?: ISignatureUrlOptions): Promise<string | null>;
 ```
+
+## TODO
+
+- [ ] conbine parameters `meta`,`contentType`,`headers` of `put` into `options`
 
 ### Change Log
 

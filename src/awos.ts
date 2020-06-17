@@ -4,6 +4,7 @@ import {
   IListObjectOptions,
   ISignatureUrlOptions,
   IGetBufferedObjectResponse,
+  IPutObjectHeaders,
 } from './types';
 import OSS, { IOSSOptions } from './oss';
 import AWS, { IAWSOptions } from './aws';
@@ -49,9 +50,10 @@ export default class AWOS implements IAWOS {
     key: string,
     data: string | Buffer,
     meta: Map<string, any> = new Map<string, any>(),
-    contentType?: string
+    contentType?: string,
+    headers?: IPutObjectHeaders
   ): Promise<void> {
-    return this.client.put(key, data, meta, contentType);
+    return this.client.put(key, data, meta, contentType, headers);
   }
 
   public async del(key: string): Promise<void> {

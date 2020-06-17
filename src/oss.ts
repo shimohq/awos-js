@@ -4,6 +4,7 @@ import {
   IListObjectOptions,
   ISignatureUrlOptions,
   IGetBufferedObjectResponse,
+  IPutObjectHeaders,
 } from './types';
 import { defaults } from 'lodash';
 
@@ -108,7 +109,8 @@ export default class OSSClient implements IAWOS {
     key: string,
     data: string | Buffer,
     meta: Map<string, any>,
-    contentType?: string
+    contentType?: string,
+    headers?: IPutObjectHeaders
   ): Promise<void> {
     const buffer =
       typeof data === 'string' ? Buffer.from(data) : (data as Buffer);
@@ -122,8 +124,23 @@ export default class OSSClient implements IAWOS {
       meta: ossMeta,
     };
 
-    if (contentType) {
-      options.mime = contentType;
+    options.mime = contentType || 'text/plain';
+
+    const _headers = headers || {};
+
+    if (Object.keys(_headers).length > 0) {
+      options.headers = options.headers || {};
+
+      // https://www.npmjs.com/package/ali-oss#putname-file-options
+      if (_headers.cacheControl) {
+        options.headers['Cache-Control'] = _headers.cacheControl;
+      }
+      if (_headers.contentDisposition) {
+        options.headers['Content-Disposition'] = _headers.contentDisposition;
+      }
+      if (_headers.contentEncoding) {
+        options.headers['Content-Encoding'] = _headers.contentEncoding;
+      }
     }
 
     await retry(

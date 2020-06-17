@@ -1,3 +1,6 @@
+import * as http from 'http';
+import * as url from 'url';
+
 import OSS from '../src/oss';
 
 beforeAll(() => {
@@ -18,6 +21,45 @@ it('should put() works fine', async () => {
   meta.set('length', this.content.length);
 
   await this.oss.put(this.key, this.content, meta, this.contentType);
+});
+
+it('should put() with headers ok', async () => {
+  const key = 'test-awos-with-headers';
+  const cacheControl = 'public, no-cache';
+  const contentDisposition =
+    'test_awos_filename.txt; filename="test_awos_filename.txt"; filename*=utf-8\'\'test_awos_filename.txt';
+  const contentEncoding = 'identity';
+
+  const meta = new Map<string, any>();
+  meta.set('length', this.content.length);
+
+  await this.oss.put(key, this.content, meta, 'text/plain', {
+    cacheControl,
+    contentDisposition,
+    contentEncoding,
+  });
+
+  const signUrl = await this.oss.signatureUrl(key);
+  const parsedUrl = url.parse(signUrl);
+  const resHeaders = await new Promise((resolve, reject) => {
+    const req = http.request(
+      {
+        hostname: parsedUrl.hostname,
+        path: parsedUrl.path,
+        method: 'GET',
+      },
+      response => {
+        resolve(response.headers);
+      }
+    );
+    req.end();
+  });
+
+  expect(resHeaders).toHaveProperty('cache-control');
+  expect(resHeaders).toHaveProperty('content-disposition');
+  expect(resHeaders).toHaveProperty('content-encoding');
+
+  await this.oss.del(key);
 });
 
 it('should get() works fine', async () => {
