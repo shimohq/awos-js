@@ -66,18 +66,19 @@ the available operation：
 ```javascript
 get(key: string, metaKeys?: string[]): Promise<IGetObjectResponse | null>;
 getAsBuffer(key: string, metaKeys: string[]): Promise<IGetBufferedObjectResponse | null>;
-put(key: string, data: string | Buffer, meta?: Map<string, any>, contentType?: string, headers?: IPutObjectHeaders): Promise<void>;
+put(key: string, data: string | Buffer, options?: IPutObjectOptions): Promise<void>;
 del(key: string): Promise<void>;
 head(key: string): Promise<Map<string, string> | null>;
 listObject(key: string, options?: IListObjectOptions): Promise<string[]>;
 signatureUrl(key: string, options?: ISignatureUrlOptions): Promise<string | null>;
 ```
 
-## TODO
-
-- [x] conbine parameters `meta`,`contentType`,`headers` of `AWOS.put` into `options`
-
 ### Change Log
+
+- v2.0.0 / 2020-06-18
+  - Breaking
+    - conbine parameters `meta`,`contentType`,`headers` of `AWOS.put` into `options`
+  - add `headers` option support for `put` method
 
 - v1.0.4 / 2019-12-26
   - support buffer in get and put operation
