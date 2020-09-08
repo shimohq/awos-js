@@ -5,6 +5,7 @@ import {
   IListObjectOptions,
   ISignatureUrlOptions,
   IGetBufferedObjectResponse,
+  IPutObjectOptions,
 } from './types';
 import * as _ from 'lodash';
 
@@ -102,23 +103,39 @@ export default class AWSClient implements IAWOS {
   public async put(
     key: string,
     data: string | Buffer,
-    meta: Map<string, any>,
-    contentType?: string
+    options?: IPutObjectOptions
   ): Promise<void> {
     const bucket = this.getBucketName(key);
 
+    const defaultOptions: IPutObjectOptions = {};
+    const _options = options || defaultOptions;
+    const defaultMeta: Map<string, any> = new Map<string, any>();
+    const _meta = _options!.meta || defaultMeta;
+
     const metaData = {};
-    for (const [k, v] of meta) {
+    for (const [k, v] of _meta) {
       metaData[k] = String(v);
     }
 
-    const params = {
+    const params: AWS.S3.Types.PutObjectRequest = {
       Body: data,
       Bucket: bucket,
       Key: key,
       Metadata: metaData,
-      ContentType: contentType || 'text/plain',
+      ContentType: _options.contentType || 'text/plain',
     };
+
+    // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property
+    const _headers = _options.headers || {};
+    if (_headers.cacheControl) {
+      params.CacheControl = _headers.cacheControl;
+    }
+    if (_headers.contentDisposition) {
+      params.ContentDisposition = _headers.contentDisposition;
+    }
+    if (_headers.contentEncoding) {
+      params.ContentEncoding = _headers.contentEncoding;
+    }
 
     await retry(
       async () => {
