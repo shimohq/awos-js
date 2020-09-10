@@ -5,6 +5,7 @@ import {
   ISignatureUrlOptions,
   IGetBufferedObjectResponse,
   IPutObjectOptions,
+  IListObjectOutput,
 } from './types';
 import { defaults } from 'lodash';
 
@@ -161,6 +162,12 @@ export default class OSSClient implements IAWOS {
     await client.delete(key);
   }
 
+  public async delMulti(keys: string[]): Promise<string[]> {
+    const client = this.getBucketName(keys[0]);
+    const r = await client.deleteMulti(keys, { quiet: true });
+    return r.deleted ? r.deleted.map(d => d.Key) : [];
+  }
+
   public async head(key: string): Promise<Map<string, string> | null> {
     const client = this.getBucketName(key);
 
@@ -207,6 +214,35 @@ export default class OSSClient implements IAWOS {
     }
 
     return res.objects ? res.objects.map((o: any) => o.name) : [];
+  }
+
+  public async listDetails(
+    key: string,
+    options?: IListObjectOptions
+  ): Promise<IListObjectOutput> {
+    const client = this.getBucketName(key);
+
+    const query = defaults({}, options);
+    if (options && options.maxKeys) {
+      query['max-keys'] = options.maxKeys;
+    }
+    const res = await client.list(query);
+
+    if (res.res.status !== 200) {
+      throw Error(`list oss objects error, res:${JSON.stringify(res)}`);
+    }
+
+    return {
+      isTruncated: res.isTruncated,
+      objects: res.objects ? res.objects.map(o => ({
+        key: o.name,
+        lastModified: o.lastModified,
+        etag: o.etag,
+        size: o.size
+      })) : [],
+      prefixes: res.prefixes || [],
+      nextMarker: res.nextMarker
+    }
   }
 
   public async signatureUrl(

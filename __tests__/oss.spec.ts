@@ -1,5 +1,6 @@
 import * as http from 'http';
 import * as url from 'url';
+const _ = require('lodash');
 
 import OSS from '../src/oss';
 
@@ -12,6 +13,8 @@ beforeAll(() => {
   });
 
   this.key = 'test-awos';
+  this.prefix = 'test-awos-multi'
+  this.keys = _.times(10, (i: number) => `${this.prefix}/${i}/${i}`)
   this.content = 'hello, awos-js';
   this.contentType = 'image/jpeg';
 });
@@ -111,6 +114,43 @@ it('should signatureUrl() works fine', async () => {
   expect(res).toContain(
     `${protocol}${process.env.OSS_BUCKET}.${suffix}/${this.key}`
   );
+});
+
+it.only('should delMulti() works fine', async () => {
+  const keys = this.keys
+  await Promise.all(keys.slice(0, 5).map(key => this.oss.put(key, this.content, {
+    contentType: this.contentType,
+  })))
+  const r = await this.oss.delMulti(keys)
+  expect(r).toEqual([])
+});
+
+it.only('should listDetails() works fine', async () => {
+  const keys = this.keys
+  await Promise.all(keys.map(key => this.oss.put(key, this.content, {
+    contentType: this.contentType,
+  })))
+  {
+    const res = await this.oss.listDetails(this.key, { prefix: `${this.prefix}/`, delimiter: '/', maxKeys: 6 })
+    expect(res.objects.length === 0)
+    expect(res.prefixes.length === 6)
+    expect(res.isTruncated).toBe(true)
+    const res2 = await this.oss.listDetails(this.key, { prefix: `${this.prefix}/`, delimiter: '/', marker: res.nextMarker, maxKeys: 6 })
+    expect(res2.objects.length === 0)
+    expect(res2.prefixes.length === 4)
+    expect(res2.isTruncated).toBe(false)
+  }
+  {
+    const res = await this.oss.listDetails(this.key, { prefix: `${this.prefix}/`, maxKeys: 6 })
+    expect(res.objects.length === 6)
+    expect(res.prefixes.length === 0)
+    expect(res.isTruncated).toBe(true)
+    const res2 = await this.oss.listDetails(this.key, { prefix: `${this.prefix}/`, marker: res.nextMarker, maxKeys: 6 })
+    expect(res2.objects.length === 4)
+    expect(res2.prefixes.length === 0)
+    expect(res2.isTruncated).toBe(false)
+  }
+  await this.oss.delMulti(keys)
 });
 
 afterAll(async () => {

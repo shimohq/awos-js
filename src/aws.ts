@@ -6,6 +6,7 @@ import {
   ISignatureUrlOptions,
   IGetBufferedObjectResponse,
   IPutObjectOptions,
+  IListObjectOutput,
 } from './types';
 import * as _ from 'lodash';
 
@@ -172,6 +173,28 @@ export default class AWSClient implements IAWOS {
     });
   }
 
+  public async delMulti(keys: string[]): Promise<string[]> {
+    const bucket = this.getBucketName(keys[0]);
+    const params = {
+      Bucket: bucket,
+      Delete: {
+        Objects: keys.map(key => ({ Key: key })),
+        Quiet: true,
+      },
+    };
+    return new Promise<string[]>((resolve, reject) => {
+      this.client.deleteObjects(params, (err, res) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(
+            res.Errors ? res.Errors.map(e => e.Key!).filter(k => k != null) : []
+          );
+        }
+      });
+    });
+  }
+
   public async head(key: string): Promise<Map<string, string> | null> {
     const bucket = this.getBucketName(key);
     const params = {
@@ -231,6 +254,53 @@ export default class AWSClient implements IAWOS {
     });
 
     return result.map(o => o.Key);
+  }
+
+  public async listDetails(
+    key: string,
+    options?: IListObjectOptions
+  ): Promise<IListObjectOutput> {
+    const bucket = this.getBucketName(key);
+    const paramsList: any = {
+      Bucket: bucket,
+    };
+
+    if (options) {
+      if (options.prefix) {
+        paramsList.Prefix = options.prefix;
+      }
+      if (options.delimiter) {
+        paramsList.Delimiter = options.delimiter;
+      }
+      if (options.marker) {
+        paramsList.Marker = options.marker;
+      }
+      if (options.maxKeys) {
+        paramsList.MaxKeys = options.maxKeys;
+      }
+    }
+
+    const result = await new Promise<IListObjectOutput>((resolve, reject) => {
+      this.client.listObjects(paramsList, (err, data) => {
+        if (err) {
+          return reject(err);
+        }
+        const result = {
+          isTruncated: data.IsTruncated || false,
+          objects: data.Contents ? data.Contents.map(o => ({
+            key: o.Key,
+            etag: o.ETag,
+            lastModified: o.LastModified,
+            size: o.Size
+          })) : [],
+          prefixes: data.CommonPrefixes ? data.CommonPrefixes.map(p => p.Prefix!).filter(p => p != null) : [],
+          nextMarker: data.NextMarker
+        }
+        return resolve(result);
+      });
+    });
+
+    return result;
   }
 
   public async signatureUrl(

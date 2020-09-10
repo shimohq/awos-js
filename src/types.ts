@@ -37,6 +37,18 @@ export interface IPutObjectHeaders {
   contentEncoding?: string;
 }
 
+export interface IListObjectOutput {
+  isTruncated: boolean
+  objects: Array<{
+    key?: string,
+    etag?: string,
+    lastModified?: Date,
+    size?: number,
+  }>,
+  prefixes: string[],
+  nextMarker?: string
+}
+
 export interface IAWOS {
   get(key: string, metaKeys: string[]): Promise<IGetObjectResponse | null>;
   getAsBuffer(
@@ -49,8 +61,10 @@ export interface IAWOS {
     options?: IPutObjectOptions
   ): Promise<void>;
   del(key: string): Promise<void>;
+  delMulti(keys: string[]): Promise<string[]>;
   head(key: string): Promise<Map<string, string> | null>;
   listObject(key: string, options?: IListObjectOptions): Promise<string[]>;
+  listDetails(key: string, options?: IListObjectOptions): Promise<IListObjectOutput>;
   signatureUrl(
     key: string,
     options?: ISignatureUrlOptions
