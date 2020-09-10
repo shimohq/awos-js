@@ -5,6 +5,7 @@ import {
   ISignatureUrlOptions,
   IGetBufferedObjectResponse,
   IPutObjectOptions,
+  IListObjectOutput,
 } from './types';
 import OSS, { IOSSOptions } from './oss';
 import AWS, { IAWSOptions } from './aws';
@@ -58,6 +59,13 @@ export default class AWOS implements IAWOS {
     return this.client.del(key);
   }
 
+  public async delMulti(keys: string[]): Promise<string[]> {
+    if (keys.length > 1000) {
+      throw new Error('Cannot delete more than 1000 keys');
+    }
+    return this.client.delMulti(keys);
+  }
+
   public async head(key: string): Promise<Map<string, string> | null> {
     return this.client.head(key);
   }
@@ -74,5 +82,12 @@ export default class AWOS implements IAWOS {
     options?: IListObjectOptions | undefined
   ): Promise<string[]> {
     return this.client.listObject(key, options);
+  }
+
+  public async listDetails(
+    key: string,
+    options?: IListObjectOptions
+  ): Promise<IListObjectOutput> {
+    return this.client.listDetails(key, options);
   }
 }
