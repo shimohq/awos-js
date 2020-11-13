@@ -75,6 +75,22 @@ it('should put() works fine', async () => {
   await this.aws.del(key);
 });
 
+it('should copy() works fine', async () => {
+  const copy = `${this.key}-copy`
+  const meta = new Map<string, any>();
+  meta.set('length', this.content.length);
+
+  await this.aws.put(this.key, this.content, {
+    meta,
+    contentType: this.contentType,
+  });
+  await this.aws.copy(copy, this.key, { meta, contentType: this.contentType });
+  const s = await this.aws.get(copy, ['length'])
+  expect(s.content).toEqual(this.content)
+  expect(Number(s.meta.get('length'))).toEqual(this.content.length)
+  await this.aws.del(copy)
+});
+
 it('should get() works fine', async () => {
   const res = await this.aws.get(this.key, ['length']);
   expect(res.content).toEqual(this.content);

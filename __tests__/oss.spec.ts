@@ -29,6 +29,22 @@ it('should put() works fine', async () => {
   });
 });
 
+it('should copy() works fine', async () => {
+  const copy = `${this.key}-copy`
+  const meta = new Map<string, any>();
+  meta.set('length', this.content.length);
+
+  await this.oss.put(this.key, this.content, {
+    meta,
+    contentType: this.contentType,
+  });
+  await this.oss.copy(copy, this.key, { meta, contentType: this.contentType });
+  const s = await this.oss.get(copy, ['length'])
+  expect(s.content).toEqual(this.content)
+  expect(Number(s.meta.get('length'))).toEqual(this.content.length)
+  await this.oss.del(copy)
+});
+
 it('should put() with headers ok', async () => {
   const key = 'test-awos-with-headers';
   const cacheControl = 'public, no-cache';

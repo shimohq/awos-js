@@ -6,6 +6,7 @@ import {
   IGetBufferedObjectResponse,
   IPutObjectOptions,
   IListObjectOutput,
+  ICopyObjectOptions,
 } from './types';
 import OSS, { IOSSOptions } from './oss';
 import AWS, { IAWSOptions } from './aws';
@@ -53,6 +54,14 @@ export default class AWOS implements IAWOS {
     options?: IPutObjectOptions
   ): Promise<void> {
     return this.client.put(key, data, options);
+  }
+
+  public async copy(
+    key: string,
+    source: string,
+    options?: ICopyObjectOptions
+  ): Promise<void> {
+    return this.client.copy(key, source, options);
   }
 
   public async del(key: string): Promise<void> {
