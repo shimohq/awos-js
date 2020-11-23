@@ -284,15 +284,17 @@ export default class OSSClient implements IAWOS {
 
     return {
       isTruncated: res.isTruncated,
-      objects: res.objects ? res.objects.map(o => ({
-        key: o.name,
-        lastModified: o.lastModified,
-        etag: o.etag,
-        size: o.size
-      })) : [],
+      objects: res.objects
+        ? res.objects.map(o => ({
+            key: o.name,
+            lastModified: o.lastModified,
+            etag: o.etag,
+            size: o.size,
+          }))
+        : [],
       prefixes: res.prefixes || [],
-      nextMarker: res.nextMarker
-    }
+      nextMarker: res.nextMarker,
+    };
   }
 
   public async signatureUrl(

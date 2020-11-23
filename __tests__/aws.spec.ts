@@ -15,8 +15,8 @@ beforeAll(() => {
   });
 
   this.key = 'test-awos';
-  this.prefix = 'test-awos-multi'
-  this.keys = _.times(10, (i: number) => `${this.prefix}/${i}/${i}`)
+  this.prefix = 'test-awos-multi';
+  this.keys = _.times(10, (i: number) => `${this.prefix}/${i}/${i}`);
   this.content = 'hello, awos-js';
   this.contentType = 'image/jpeg';
 });
@@ -76,7 +76,7 @@ it('should put() works fine', async () => {
 });
 
 it('should copy() works fine', async () => {
-  const copy = `${this.key}-copy`
+  const copy = `${this.key}-copy`;
   const meta = new Map<string, any>();
   meta.set('length', this.content.length);
 
@@ -85,10 +85,10 @@ it('should copy() works fine', async () => {
     contentType: this.contentType,
   });
   await this.aws.copy(copy, this.key, { meta, contentType: this.contentType });
-  const s = await this.aws.get(copy, ['length'])
-  expect(s.content).toEqual(this.content)
-  expect(Number(s.meta.get('length'))).toEqual(this.content.length)
-  await this.aws.del(copy)
+  const s = await this.aws.get(copy, ['length']);
+  expect(s.content).toEqual(this.content);
+  expect(Number(s.meta.get('length'))).toEqual(this.content.length);
+  await this.aws.del(copy);
 });
 
 it('should get() works fine', async () => {
@@ -131,42 +131,66 @@ it('should signatureUrl() works fine', async () => {
 });
 
 it('should delMulti() works fine', async () => {
-  const keys = this.keys
-  await Promise.all(keys.slice(0, 5).map(key => this.aws.put(key, this.content, {
-    contentType: this.contentType,
-  })))
-  const r = await this.aws.delMulti(keys)
-  expect(r).toEqual([])
+  const keys = this.keys;
+  await Promise.all(
+    keys.slice(0, 5).map(key =>
+      this.aws.put(key, this.content, {
+        contentType: this.contentType,
+      })
+    )
+  );
+  const r = await this.aws.delMulti(keys);
+  expect(r).toEqual([]);
 });
 
 it('should listDetails() works fine', async () => {
-  const keys = this.keys
-  await Promise.all(keys.map(key => this.aws.put(key, this.content, {
-    contentType: this.contentType,
-  })))
+  const keys = this.keys;
+  await Promise.all(
+    keys.map(key =>
+      this.aws.put(key, this.content, {
+        contentType: this.contentType,
+      })
+    )
+  );
   {
-    const res = await this.aws.listDetails(this.key, { prefix: `${this.prefix}/`, delimiter: '/', maxKeys: 6 })
-    expect(res.objects.length === 0)
-    expect(res.prefixes.length === 6)
-    expect(res.isTruncated).toBe(true)
-    const res2 = await this.aws.listDetails(this.key, { prefix: `${this.prefix}/`, delimiter: '/', marker: res.nextMarker, maxKeys: 6 })
-    expect(res2.objects.length === 0)
-    expect(res2.prefixes.length === 4)
-    expect(res2.isTruncated).toBe(false)
+    const res = await this.aws.listDetails(this.key, {
+      prefix: `${this.prefix}/`,
+      delimiter: '/',
+      maxKeys: 6,
+    });
+    expect(res.objects.length === 0);
+    expect(res.prefixes.length === 6);
+    expect(res.isTruncated).toBe(true);
+    const res2 = await this.aws.listDetails(this.key, {
+      prefix: `${this.prefix}/`,
+      delimiter: '/',
+      marker: res.nextMarker,
+      maxKeys: 6,
+    });
+    expect(res2.objects.length === 0);
+    expect(res2.prefixes.length === 4);
+    expect(res2.isTruncated).toBe(false);
   }
   {
-    const res = await this.aws.listDetails(this.key, { prefix: `${this.prefix}/`, maxKeys: 6 })
-    expect(res.objects.length === 6)
-    expect(res.prefixes.length === 0)
-    expect(res.isTruncated).toBe(true)
-    const res2 = await this.aws.listDetails(this.key, { prefix: `${this.prefix}/`, marker: res.nextMarker, maxKeys: 6 })
-    expect(res2.objects.length === 4)
-    expect(res2.prefixes.length === 0)
-    expect(res2.isTruncated).toBe(false)
+    const res = await this.aws.listDetails(this.key, {
+      prefix: `${this.prefix}/`,
+      maxKeys: 6,
+    });
+    expect(res.objects.length === 6);
+    expect(res.prefixes.length === 0);
+    expect(res.isTruncated).toBe(true);
+    const res2 = await this.aws.listDetails(this.key, {
+      prefix: `${this.prefix}/`,
+      marker: res.nextMarker,
+      maxKeys: 6,
+    });
+    expect(res2.objects.length === 4);
+    expect(res2.prefixes.length === 0);
+    expect(res2.isTruncated).toBe(false);
   }
 }, 10000);
 
 afterAll(async () => {
   await this.aws.del(this.key);
-  await this.aws.delMulti(this.keys)
+  await this.aws.delMulti(this.keys);
 });

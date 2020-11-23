@@ -210,7 +210,7 @@ export default class AWSClient implements IAWOS {
       }
     );
   }
-  
+
   public async del(key: string): Promise<void> {
     const bucket = this.getBucketName(key);
     const params = {
@@ -342,15 +342,19 @@ export default class AWSClient implements IAWOS {
         }
         const result = {
           isTruncated: data.IsTruncated || false,
-          objects: data.Contents ? data.Contents.map(o => ({
-            key: o.Key,
-            etag: o.ETag,
-            lastModified: o.LastModified,
-            size: o.Size
-          })) : [],
-          prefixes: data.CommonPrefixes ? data.CommonPrefixes.map(p => p.Prefix!).filter(p => p != null) : [],
-          nextMarker: data.NextMarker
-        }
+          objects: data.Contents
+            ? data.Contents.map(o => ({
+                key: o.Key,
+                etag: o.ETag,
+                lastModified: o.LastModified,
+                size: o.Size,
+              }))
+            : [],
+          prefixes: data.CommonPrefixes
+            ? data.CommonPrefixes.map(p => p.Prefix!).filter(p => p != null)
+            : [],
+          nextMarker: data.NextMarker,
+        };
         return resolve(result);
       });
     });

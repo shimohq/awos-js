@@ -44,15 +44,15 @@ export interface ICopyObjectOptions {
 }
 
 export interface IListObjectOutput {
-  isTruncated: boolean
+  isTruncated: boolean;
   objects: Array<{
-    key?: string,
-    etag?: string,
-    lastModified?: Date,
-    size?: number,
-  }>,
-  prefixes: string[],
-  nextMarker?: string
+    key?: string;
+    etag?: string;
+    lastModified?: Date;
+    size?: number;
+  }>;
+  prefixes: string[];
+  nextMarker?: string;
 }
 
 export interface IAWOS {
@@ -75,7 +75,10 @@ export interface IAWOS {
   delMulti(keys: string[]): Promise<string[]>;
   head(key: string): Promise<Map<string, string> | null>;
   listObject(key: string, options?: IListObjectOptions): Promise<string[]>;
-  listDetails(key: string, options?: IListObjectOptions): Promise<IListObjectOutput>;
+  listDetails(
+    key: string,
+    options?: IListObjectOptions
+  ): Promise<IListObjectOutput>;
   signatureUrl(
     key: string,
     options?: ISignatureUrlOptions
