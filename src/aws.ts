@@ -7,6 +7,7 @@ import {
   IGetBufferedObjectResponse,
   IPutObjectOptions,
   IListObjectOutput,
+  ICopyObjectOptions,
 } from './types';
 import * as _ from 'lodash';
 
@@ -156,6 +157,60 @@ export default class AWSClient implements IAWOS {
     );
   }
 
+  public async copy(
+    key: string,
+    source: string,
+    options?: ICopyObjectOptions
+  ): Promise<void> {
+    const bucket = this.getBucketName(key);
+    const defaultOptions: ICopyObjectOptions = {};
+    const _options = options || defaultOptions;
+    const defaultMeta: Map<string, any> = new Map<string, any>();
+    const _meta = _options!.meta || defaultMeta;
+
+    const metaData = {};
+    for (const [k, v] of _meta) {
+      metaData[k] = String(v);
+    }
+
+    const params: AWS.S3.Types.CopyObjectRequest = {
+      CopySource: `${bucket}/${source}`,
+      Bucket: bucket,
+      Key: key,
+      Metadata: metaData,
+      ContentType: _options.contentType || 'text/plain',
+    };
+
+    // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property
+    const _headers = _options.headers || {};
+    if (_headers.cacheControl) {
+      params.CacheControl = _headers.cacheControl;
+    }
+    if (_headers.contentDisposition) {
+      params.ContentDisposition = _headers.contentDisposition;
+    }
+    if (_headers.contentEncoding) {
+      params.ContentEncoding = _headers.contentEncoding;
+    }
+
+    await retry(
+      async () => {
+        await new Promise((resolve, reject) => {
+          this.client.copyObject(params, err => {
+            if (err) {
+              return reject(err);
+            }
+            resolve();
+          });
+        });
+      },
+      {
+        retries: 3,
+        maxTimeout: 2000,
+      }
+    );
+  }
+  
   public async del(key: string): Promise<void> {
     const bucket = this.getBucketName(key);
     const params = {

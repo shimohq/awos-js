@@ -6,6 +6,7 @@ import {
   IGetBufferedObjectResponse,
   IPutObjectOptions,
   IListObjectOutput,
+  ICopyObjectOptions,
 } from './types';
 import { defaults } from 'lodash';
 
@@ -149,6 +150,55 @@ export default class OSSClient implements IAWOS {
     await retry(
       async () => {
         await client.put(key, buffer, opts);
+      },
+      {
+        retries: 3,
+        maxTimeout: 2000,
+      }
+    );
+  }
+
+  public async copy(
+    key: string,
+    source: string,
+    options?: ICopyObjectOptions
+  ): Promise<void> {
+    const client = this.getBucketName(key);
+    const defaultOptions: ICopyObjectOptions = {};
+    const _options = options || defaultOptions;
+    const defaultMeta: Map<string, any> = new Map<string, any>();
+    const _meta = _options!.meta || defaultMeta;
+
+    const ossMeta = {};
+    for (const [k, v] of _meta) {
+      ossMeta[k] = v;
+    }
+    const opts: any = {
+      meta: ossMeta,
+    };
+
+    opts.mime = _options.contentType || 'text/plain';
+
+    const _headers = _options.headers || {};
+
+    if (Object.keys(_headers).length > 0) {
+      opts.headers = opts.headers || {};
+
+      // https://www.npmjs.com/package/ali-oss#putname-file-options
+      if (_headers.cacheControl) {
+        opts.headers['Cache-Control'] = _headers.cacheControl;
+      }
+      if (_headers.contentDisposition) {
+        opts.headers['Content-Disposition'] = _headers.contentDisposition;
+      }
+      if (_headers.contentEncoding) {
+        opts.headers['Content-Encoding'] = _headers.contentEncoding;
+      }
+    }
+
+    await retry(
+      async () => {
+        await client.copy(key, source, opts);
       },
       {
         retries: 3,

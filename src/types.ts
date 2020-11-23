@@ -37,6 +37,12 @@ export interface IPutObjectHeaders {
   contentEncoding?: string;
 }
 
+export interface ICopyObjectOptions {
+  meta?: Map<string, any>;
+  contentType?: string;
+  headers?: IPutObjectHeaders;
+}
+
 export interface IListObjectOutput {
   isTruncated: boolean
   objects: Array<{
@@ -59,6 +65,11 @@ export interface IAWOS {
     key: string,
     data: string | Buffer,
     options?: IPutObjectOptions
+  ): Promise<void>;
+  copy(
+    source: string,
+    key: string,
+    options?: ICopyObjectOptions
   ): Promise<void>;
   del(key: string): Promise<void>;
   delMulti(keys: string[]): Promise<string[]>;
