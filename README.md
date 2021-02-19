@@ -73,6 +73,7 @@ head(key: string): Promise<Map<string, string> | null>;
 listObject(key: string, options?: IListObjectOptions): Promise<string[]>;
 listDetails(key: string, options?: IListObjectOptions): Promise<IListObjectOutput>;
 signatureUrl(key: string, options?: ISignatureUrlOptions): Promise<string | null>;
+copy(key: string, source: string, options?: ICopyObjectOptions): Promise<void>;
 ```
 
 ### Change Log

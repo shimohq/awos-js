@@ -179,6 +179,7 @@ export default class AWSClient implements IAWOS {
       Key: key,
       Metadata: metaData,
       ContentType: _options.contentType || 'text/plain',
+      MetadataDirective: _.isEmpty(metaData) ? 'COPY' : 'REPLACE',
     };
 
     // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property
