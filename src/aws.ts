@@ -57,11 +57,15 @@ export default class AWSClient implements IAWOS {
         options.region,
         'options.region is required when options.s3ForcePathStyle = false'
       );
-      this.client = new AWS.S3({
+      const s3Options: any = {
         accessKeyId: options.accessKeyId,
         secretAccessKey: options.secretAccessKey,
         region: options.region,
-      });
+      };
+      if (options.endpoint) {
+        s3Options.endpoint = options.endpoint;
+      }
+      this.client = new AWS.S3(s3Options);
     }
 
     this.bucket = options.bucket;
