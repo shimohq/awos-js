@@ -22,8 +22,11 @@ export interface IAWSOptions {
   shards?: string[];
   s3ForcePathStyle?: boolean;
   region?: string;
+  signatureVersion?: string;
   [key: string]: any;
 }
+
+const DefaultSignatureVersion = 'v4';
 
 export default class AWSClient implements IAWOS {
   private client: AWS.S3;
@@ -48,6 +51,7 @@ export default class AWSClient implements IAWOS {
         secretAccessKey: options.secretAccessKey,
         endpoint: options.endpoint,
         region: options.region || 'cn-north-1',
+        signatureVersion: options.signatureVersion || DefaultSignatureVersion,
         s3ForcePathStyle,
       });
     }
@@ -61,6 +65,7 @@ export default class AWSClient implements IAWOS {
         accessKeyId: options.accessKeyId,
         secretAccessKey: options.secretAccessKey,
         region: options.region,
+        signatureVersion: options.signatureVersion || DefaultSignatureVersion,
       };
       if (options.endpoint) {
         s3Options.endpoint = options.endpoint;
