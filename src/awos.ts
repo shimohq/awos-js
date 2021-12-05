@@ -99,4 +99,18 @@ export default class AWOS implements IAWOS {
   ): Promise<IListObjectOutput> {
     return this.client.listDetails(key, options);
   }
+
+  public async listObjectV2(
+    key: string,
+    options?: IListObjectOptions | undefined
+  ): Promise<string[]> {
+    return this.client.listObjectV2(key, options);
+  }
+
+  public async listDetailsV2(
+    key: string,
+    options?: IListObjectOptions
+  ): Promise<IListObjectOutput> {
+    return this.client.listDetailsV2(key, options);
+  }
 }

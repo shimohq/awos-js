@@ -2,10 +2,12 @@ import {
   IAWOS,
   IGetObjectResponse,
   IListObjectOptions,
+  IListObjectV2Options,
   ISignatureUrlOptions,
   IGetBufferedObjectResponse,
   IPutObjectOptions,
   IListObjectOutput,
+  IListObjectV2Output,
   ICopyObjectOptions,
 } from './types';
 import { defaults } from 'lodash';
@@ -266,6 +268,33 @@ export default class OSSClient implements IAWOS {
     return res.objects ? res.objects.map((o: any) => o.name) : [];
   }
 
+  public async listObjectV2(
+    key: string,
+    options?: IListObjectV2Options
+  ): Promise<string[]> {
+    const client = this.getBucketName(key);
+
+    const query = defaults({}, options);
+    if (options) {
+      if (options.maxKeys) {
+        query['max-keys'] = options.maxKeys;
+      }
+      if (options.prefix) {
+        query['prefix'] = options.prefix;
+      }
+      if (options.continuationToken) {
+        query['continuation-token'] = options.continuationToken;
+      }
+    }
+    const res = await client.listV2(query);
+
+    if (res.res.status !== 200) {
+      throw Error(`list oss objects error, res:${JSON.stringify(res)}`);
+    }
+
+    return res.objects ? res.objects.map((o: any) => o.name) : [];
+  }
+
   public async listDetails(
     key: string,
     options?: IListObjectOptions
@@ -294,6 +323,47 @@ export default class OSSClient implements IAWOS {
         : [],
       prefixes: res.prefixes || [],
       nextMarker: res.nextMarker,
+    };
+  }
+
+  public async listDetailsV2(
+    key: string,
+    options?: IListObjectV2Options
+  ): Promise<IListObjectV2Output> {
+    const client = this.getBucketName(key);
+
+    const query = defaults({}, options);
+
+    if (options) {
+      if (options.maxKeys) {
+        query['max-keys'] = options.maxKeys;
+      }
+      if (options.prefix) {
+        query['prefix'] = options.prefix;
+      }
+      if (options.continuationToken) {
+        query['continuation-token'] = options.continuationToken;
+      }
+    }
+
+    const res = await client.list(query);
+
+    if (res.res.status !== 200) {
+      throw Error(`list oss objects error, res:${JSON.stringify(res)}`);
+    }
+
+    return {
+      isTruncated: res.isTruncated,
+      objects: res.objects
+        ? res.objects.map(o => ({
+            key: o.name,
+            lastModified: o.lastModified,
+            etag: o.etag,
+            size: o.size,
+          }))
+        : [],
+      prefix: res.prefix || [],
+      nextContinuationToken: res.nextContinuationToken,
     };
   }
 

@@ -122,6 +122,22 @@ it('should listObject() works fine', async () => {
   expect(notExistPrefixRes.length).toBe(0);
 });
 
+it('should listObjectV2() works fine', async () => {
+  const res = await this.aws.listObjectV2(this.key, {
+    prefix: 'test',
+    maxKeys: 5,
+  });
+
+  expect(res.length).toBeGreaterThanOrEqual(1);
+  expect(res.length).toBeLessThanOrEqual(5);
+
+  const notExistPrefixRes = await this.aws.listObjectV2(this.key, {
+    prefix: 'test-aaaabbbbccccc',
+    maxKeys: 5,
+  });
+  expect(notExistPrefixRes.length).toBe(0);
+});
+
 it('should signatureUrl() works fine', async () => {
   const res = await this.aws.signatureUrl(this.key);
 
@@ -186,6 +202,53 @@ it('should listDetails() works fine', async () => {
     });
     expect(res2.objects.length === 4);
     expect(res2.prefixes.length === 0);
+    expect(res2.isTruncated).toBe(false);
+  }
+}, 10000);
+
+it('should listDetailsV2() works fine', async () => {
+  const keys = this.keys;
+  await Promise.all(
+    keys.map((key) =>
+      this.aws.put(key, this.content, {
+        contentType: this.contentType,
+      })
+    )
+  );
+  {
+    const res = await this.aws.listDetailsV2(this.key, {
+      prefix: `${this.prefix}/`,
+      delimiter: '/',
+      maxKeys: 6,
+    });
+    expect(res.objects.length === 0);
+    expect(res.prefix.length === 6);
+    expect(res.isTruncated).toBe(true);
+    const res2 = await this.aws.listDetailsV2(this.key, {
+      prefix: `${this.prefix}/`,
+      delimiter: '/',
+      continuationToken: res.nextContinuationToken,
+      maxKeys: 6,
+    });
+    expect(res2.objects.length === 0);
+    expect(res2.prefix.length === 4);
+    expect(res2.isTruncated).toBe(false);
+  }
+  {
+    const res = await this.aws.listDetailsV2(this.key, {
+      prefix: `${this.prefix}/`,
+      maxKeys: 6,
+    });
+    expect(res.objects.length === 6);
+    expect(res.prefix.length === 0);
+    expect(res.isTruncated).toBe(true);
+    const res2 = await this.aws.listDetailsV2(this.key, {
+      prefix: `${this.prefix}/`,
+      continuationToken: res.nextContinuationToken,
+      maxKeys: 6,
+    });
+    expect(res2.objects.length === 4);
+    expect(res2.prefix.length === 0);
     expect(res2.isTruncated).toBe(false);
   }
 }, 10000);
