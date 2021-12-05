@@ -17,6 +17,13 @@ export interface IListObjectOptions {
   maxKeys?: number;
 }
 
+export interface IListObjectV2Options {
+  prefix?: string;
+  delimiter?: string;
+  maxKeys?: number;
+  continuationToken: string;
+}
+
 export interface ISignatureUrlOptions {
   method?: string;
   expires?: number;
@@ -54,6 +61,17 @@ export interface IListObjectOutput {
   prefixes: string[];
   nextMarker?: string;
 }
+export interface IListObjectV2Output {
+  isTruncated: boolean;
+  objects: Array<{
+    key?: string;
+    etag?: string;
+    lastModified?: Date;
+    size?: number;
+  }>;
+  nextContinuationToken?: string;
+  prefix: string[];
+}
 
 export interface IAWOS {
   get(key: string, metaKeys: string[]): Promise<IGetObjectResponse | null>;
@@ -75,10 +93,15 @@ export interface IAWOS {
   delMulti(keys: string[]): Promise<string[]>;
   head(key: string): Promise<Map<string, string> | null>;
   listObject(key: string, options?: IListObjectOptions): Promise<string[]>;
+  listObjectV2(key: string, options?: IListObjectV2Options): Promise<string[]>;
   listDetails(
     key: string,
     options?: IListObjectOptions
   ): Promise<IListObjectOutput>;
+  listDetailsV2(
+    key: string,
+    options?: IListObjectV2Options
+  ): Promise<IListObjectV2Output>;
   signatureUrl(
     key: string,
     options?: ISignatureUrlOptions

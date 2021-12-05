@@ -3,10 +3,12 @@ import {
   IAWOS,
   IGetObjectResponse,
   IListObjectOptions,
+  IListObjectV2Options,
   ISignatureUrlOptions,
   IGetBufferedObjectResponse,
   IPutObjectOptions,
   IListObjectOutput,
+  IListObjectV2Output,
   ICopyObjectOptions,
 } from './types';
 import * as _ from 'lodash';
@@ -318,7 +320,40 @@ export default class AWSClient implements IAWOS {
       });
     });
 
-    return result.map(o => o.Key);
+    return result.map((o) => o.Key);
+  }
+
+  public async listObjectV2(
+    key: string,
+    options?: IListObjectV2Options
+  ): Promise<string[]> {
+    const bucket = this.getBucketName(key);
+    const paramsList: any = {
+      Bucket: bucket,
+    };
+
+    if (options) {
+      if (options.prefix) {
+        paramsList.Prefix = options.prefix;
+      }
+      if (options.continuationToken) {
+        paramsList.ContinuationToken = options.continuationToken;
+      }
+      if (options.maxKeys) {
+        paramsList.MaxKeys = options.maxKeys;
+      }
+    }
+
+    const result: any[] = await new Promise((resolve, reject) => {
+      this.client.listObjects(paramsList, (err, data) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(data.Contents);
+      });
+    });
+
+    return result.map((o) => o.Key);
   }
 
   public async listDetails(
@@ -364,6 +399,57 @@ export default class AWSClient implements IAWOS {
             ? data.CommonPrefixes.map(p => p.Prefix!).filter(p => p != null)
             : [],
           nextMarker: data.NextMarker,
+        };
+        return resolve(result);
+      });
+    });
+
+    return result;
+  }
+
+  public async listDetailsV2(
+    key: string,
+    options?: IListObjectV2Options
+  ): Promise<IListObjectV2Output> {
+    const bucket = this.getBucketName(key);
+    const paramsList: any = {
+      Bucket: bucket,
+    };
+
+    if (options) {
+      if (options.prefix) {
+        paramsList.Prefix = options.prefix;
+      }
+      if (options.delimiter) {
+        paramsList.Delimiter = options.delimiter;
+      }
+      if (options.continuationToken) {
+        paramsList.ContinuationToken = options.continuationToken;
+      }
+      if (options.maxKeys) {
+        paramsList.MaxKeys = options.maxKeys;
+      }
+    }
+
+    const result = await new Promise<IListObjectV2Output>((resolve, reject) => {
+      this.client.listObjectsV2(paramsList, (err, data) => {
+        if (err) {
+          return reject(err);
+        }
+        const result = {
+          isTruncated: data.IsTruncated || false,
+          objects: data.Contents
+            ? data.Contents.map((o) => ({
+                key: o.Key,
+                etag: o.ETag,
+                lastModified: o.LastModified,
+                size: o.Size,
+              }))
+            : [],
+          prefix: data.CommonPrefixes
+            ? data.CommonPrefixes.map((p) => p.Prefix!).filter((p) => p != null)
+            : [],
+          nextContinuationToken: data.NextContinuationToken,
         };
         return resolve(result);
       });
