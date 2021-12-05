@@ -2,10 +2,12 @@ import {
   IAWOS,
   IGetObjectResponse,
   IListObjectOptions,
+  IListObjectV2Options,
   ISignatureUrlOptions,
   IGetBufferedObjectResponse,
   IPutObjectOptions,
   IListObjectOutput,
+  IListObjectV2Output,
   ICopyObjectOptions,
 } from './types';
 import OSS, { IOSSOptions } from './oss';
@@ -102,15 +104,15 @@ export default class AWOS implements IAWOS {
 
   public async listObjectV2(
     key: string,
-    options?: IListObjectOptions | undefined
+    options?: IListObjectV2Options | undefined
   ): Promise<string[]> {
     return this.client.listObjectV2(key, options);
   }
 
   public async listDetailsV2(
     key: string,
-    options?: IListObjectOptions
-  ): Promise<IListObjectOutput> {
+    options?: IListObjectV2Options
+  ): Promise<IListObjectV2Output> {
     return this.client.listDetailsV2(key, options);
   }
 }
