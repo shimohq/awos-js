@@ -342,7 +342,7 @@ export default class OSSClient implements IAWOS {
         query['prefix'] = options.prefix;
       }
       if (options.continuationToken) {
-        query['continuationToken'] = options.continuationToken;
+        query['continuation-token'] = options.continuationToken;
       }
     }
 
