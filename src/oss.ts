@@ -229,14 +229,12 @@ export default class OSSClient implements IAWOS {
       if (res.status === 304) {
         return null;
       } else if (res.status === 200) {
-        if (!res.meta) {
-          return null;
-        }
-
         const meta = new Map<string, string>();
-        Object.keys(res.meta).forEach((k: string) => {
-          meta.set(k, res.meta[k]);
-        });
+        if (res.meta) {
+          Object.keys(res.meta).forEach((k: string) => {
+            meta.set(k, res.meta[k]);
+          });
+        }
         return meta;
       }
 
