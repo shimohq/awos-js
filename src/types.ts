@@ -73,6 +73,10 @@ export interface IListObjectV2Output {
   prefix: string[];
 }
 
+export interface IHeadOptions {
+  withStandardHeaders: boolean;
+}
+
 export interface IAWOS {
   get(key: string, metaKeys: string[]): Promise<IGetObjectResponse | null>;
   getAsBuffer(
@@ -91,7 +95,10 @@ export interface IAWOS {
   ): Promise<void>;
   del(key: string): Promise<void>;
   delMulti(keys: string[]): Promise<string[]>;
-  head(key: string): Promise<Map<string, string> | null>;
+  head(
+    key: string,
+    options?: IHeadOptions
+  ): Promise<Map<string, string> | null>;
   listObject(key: string, options?: IListObjectOptions): Promise<string[]>;
   listObjectV2(key: string, options?: IListObjectV2Options): Promise<string[]>;
   listDetails(

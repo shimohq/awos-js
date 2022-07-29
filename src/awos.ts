@@ -9,9 +9,12 @@ import {
   IListObjectOutput,
   IListObjectV2Output,
   ICopyObjectOptions,
+  IHeadOptions,
 } from './types';
 import OSS, { IOSSOptions } from './oss';
 import AWS, { IAWSOptions } from './aws';
+
+import * as _ from 'lodash';
 
 const assert = require('assert');
 
@@ -77,8 +80,13 @@ export default class AWOS implements IAWOS {
     return this.client.delMulti(keys);
   }
 
-  public async head(key: string): Promise<Map<string, string> | null> {
-    return this.client.head(key);
+  // 标准响应头包括 'content-type','content-length','accept-ranges','etag','last-modified'
+  // 其中 last-modified 统一返回毫秒级时间戳
+  public async head(
+    key: string,
+    options?: IHeadOptions
+  ): Promise<Map<string, string> | null> {
+    return this.client.head(key, options);
   }
 
   public async signatureUrl(

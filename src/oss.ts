@@ -9,12 +9,21 @@ import {
   IListObjectOutput,
   IListObjectV2Output,
   ICopyObjectOptions,
+  IHeadOptions,
 } from './types';
 import { defaults } from 'lodash';
 
 const OSS = require('ali-oss');
 const assert = require('assert');
 const retry = require('async-retry');
+
+const STANDARD_HEADERS = [
+  'content-type',
+  'content-length',
+  'accept-ranges',
+  'etag',
+  'last-modified',
+];
 
 export interface IOSSOptions {
   accessKeyId: string;
@@ -220,7 +229,10 @@ export default class OSSClient implements IAWOS {
     return r.deleted ? r.deleted.map(d => d.Key) : [];
   }
 
-  public async head(key: string): Promise<Map<string, string> | null> {
+  public async head(
+    key: string,
+    options?: IHeadOptions
+  ): Promise<Map<string, string> | null> {
     const client = this.getBucketName(key);
 
     try {
@@ -234,6 +246,15 @@ export default class OSSClient implements IAWOS {
           Object.keys(res.meta).forEach((k: string) => {
             meta.set(k, res.meta[k]);
           });
+        }
+        if (options && options.withStandardHeaders) {
+          for (const k of STANDARD_HEADERS) {
+            if (k == 'last-modified') {
+              meta.set(k, String(new Date(res.res.headers[k]).getTime()));
+              continue;
+            }
+            meta.set(k, res.res.headers[k]);
+          }
         }
         return meta;
       }
