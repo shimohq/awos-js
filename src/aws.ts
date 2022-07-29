@@ -10,11 +10,20 @@ import {
   IListObjectOutput,
   IListObjectV2Output,
   ICopyObjectOptions,
+  IHeadOptions,
 } from './types';
 import * as _ from 'lodash';
 
 const assert = require('assert');
 const retry = require('async-retry');
+
+const STANDARD_HEADERS_KEYMAP = {
+  ContentType: 'content-type',
+  ContentLength: 'content-length',
+  AcceptRanges: 'accept-ranges',
+  ETag: 'etag',
+  LastModified: 'last-modified',
+};
 
 export interface IAWSOptions {
   accessKeyId: string;
@@ -262,7 +271,10 @@ export default class AWSClient implements IAWOS {
     });
   }
 
-  public async head(key: string): Promise<Map<string, string> | null> {
+  public async head(
+    key: string,
+    options?: IHeadOptions
+  ): Promise<Map<string, string> | null> {
     const bucket = this.getBucketName(key);
     const params = {
       Bucket: bucket,
@@ -284,6 +296,18 @@ export default class AWSClient implements IAWOS {
           Object.keys(data.Metadata).forEach((k: string) => {
             meta.set(k, metaData[k]);
           });
+        }
+        if (options && options.withStandardHeaders) {
+          for (const k of Object.keys(STANDARD_HEADERS_KEYMAP)) {
+            if (STANDARD_HEADERS_KEYMAP[k] == 'last-modified') {
+              meta.set(
+                STANDARD_HEADERS_KEYMAP[k],
+                String(new Date(data[k]).getTime())
+              );
+              continue;
+            }
+            meta.set(STANDARD_HEADERS_KEYMAP[k], String(data[k]));
+          }
         }
         resolve(meta);
       });
@@ -320,7 +344,7 @@ export default class AWSClient implements IAWOS {
       });
     });
 
-    return result.map((o) => o.Key);
+    return result.map(o => o.Key);
   }
 
   public async listObjectV2(
@@ -353,7 +377,7 @@ export default class AWSClient implements IAWOS {
       });
     });
 
-    return result.map((o) => o.Key);
+    return result.map(o => o.Key);
   }
 
   public async listDetails(
@@ -439,7 +463,7 @@ export default class AWSClient implements IAWOS {
         const result = {
           isTruncated: data.IsTruncated || false,
           objects: data.Contents
-            ? data.Contents.map((o) => ({
+            ? data.Contents.map(o => ({
                 key: o.Key,
                 etag: o.ETag,
                 lastModified: o.LastModified,
@@ -447,7 +471,7 @@ export default class AWSClient implements IAWOS {
               }))
             : [],
           prefix: data.CommonPrefixes
-            ? data.CommonPrefixes.map((p) => p.Prefix!).filter((p) => p != null)
+            ? data.CommonPrefixes.map(p => p.Prefix!).filter(p => p != null)
             : [],
           nextContinuationToken: data.NextContinuationToken,
         };
