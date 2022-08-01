@@ -69,7 +69,7 @@ getAsBuffer(key: string, metaKeys: string[]): Promise<IGetBufferedObjectResponse
 put(key: string, data: string | Buffer, options?: IPutObjectOptions): Promise<void>;
 del(key: string): Promise<void>;
 delMulti(keys: string[]): Promise<string[]>; // return keys not deleted
-head(key: string): Promise<Map<string, string> | null>;
+head(key: string, options?: IHeadOptions): Promise<Map<string, string> | null>;
 listObject(key: string, options?: IListObjectOptions): Promise<string[]>;
 listDetails(key: string, options?: IListObjectOptions): Promise<IListObjectOutput>;
 signatureUrl(key: string, options?: ISignatureUrlOptions): Promise<string | null>;
