@@ -161,7 +161,7 @@ export default class AWSClient implements IAWOS {
 
     await retry(
       async () => {
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
           this.client.putObject(params, err => {
             if (err) {
               return reject(err);
@@ -183,6 +183,7 @@ export default class AWSClient implements IAWOS {
     options?: ICopyObjectOptions
   ): Promise<void> {
     const bucket = this.getBucketName(key);
+    const sourceBucket = this.getBucketName(source);
     const defaultOptions: ICopyObjectOptions = {};
     const _options = options || defaultOptions;
     const defaultMeta: Map<string, any> = new Map<string, any>();
@@ -194,7 +195,7 @@ export default class AWSClient implements IAWOS {
     }
 
     const params: AWS.S3.Types.CopyObjectRequest = {
-      CopySource: `${bucket}/${source}`,
+      CopySource: `${sourceBucket}/${source}`,
       Bucket: bucket,
       Key: key,
       Metadata: metaData,
@@ -216,7 +217,7 @@ export default class AWSClient implements IAWOS {
 
     await retry(
       async () => {
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
           this.client.copyObject(params, err => {
             if (err) {
               return reject(err);
@@ -239,7 +240,7 @@ export default class AWSClient implements IAWOS {
       Key: key,
     };
 
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       this.client.deleteObject(params, err => {
         if (err) {
           return reject(err);
@@ -335,7 +336,7 @@ export default class AWSClient implements IAWOS {
       }
     }
 
-    const result: any[] = await new Promise((resolve, reject) => {
+    const result: any[] = await new Promise<any>((resolve, reject) => {
       this.client.listObjects(paramsList, (err, data) => {
         if (err) {
           return reject(err);
@@ -368,7 +369,7 @@ export default class AWSClient implements IAWOS {
       }
     }
 
-    const result: any[] = await new Promise((resolve, reject) => {
+    const result: any[] = await new Promise<any>((resolve, reject) => {
       this.client.listObjects(paramsList, (err, data) => {
         if (err) {
           return reject(err);
