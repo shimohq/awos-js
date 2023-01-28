@@ -61,7 +61,7 @@
     "@types/jest": "^24.0.9",
     "@types/lodash": "^4.14.122",
     "@types/node": "^11.10.4",
-    "jest": "^24.1.0",
+    "jest": "^29.4.1",
     "prettier": "^1.16.4",
     "rimraf": "^2.6.3",
     "ts-jest": "^24.0.0",
