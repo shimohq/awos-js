@@ -36,7 +36,9 @@ export interface IOSSOptions {
 
 export default class OSSClient implements IAWOS {
   private client: any;
+  private bucketName: string;
   private clients: Map<string, any> = new Map();
+  private buckets: Map<string, string> = new Map();
   private OSS_META_PREFIX = 'x-oss-meta-';
 
   constructor(options: IOSSOptions) {
@@ -56,6 +58,7 @@ export default class OSSClient implements IAWOS {
             bucket,
           })
         );
+        this.buckets.set(letters, bucket);
       });
     } else {
       this.client = new OSS({
@@ -64,6 +67,7 @@ export default class OSSClient implements IAWOS {
         endpoint: options.endpoint,
         bucket: options.bucket,
       });
+      this.bucketName = options.bucket;
     }
   }
 
@@ -84,7 +88,7 @@ export default class OSSClient implements IAWOS {
     key: string,
     metaKeys: string[]
   ): Promise<IGetBufferedObjectResponse | null> {
-    const client = this.getBucketName(key);
+    const client = this.getClient(key);
 
     try {
       const res = await client.get(key);
@@ -125,7 +129,7 @@ export default class OSSClient implements IAWOS {
   ): Promise<void> {
     const buffer =
       typeof data === 'string' ? Buffer.from(data) : (data as Buffer);
-    const client = this.getBucketName(key);
+    const client = this.getClient(key);
     const defaultOptions: IPutObjectOptions = {};
     const _options = options || defaultOptions;
     const defaultMeta: Map<string, any> = new Map<string, any>();
@@ -174,7 +178,8 @@ export default class OSSClient implements IAWOS {
     source: string,
     options?: ICopyObjectOptions
   ): Promise<void> {
-    const client = this.getBucketName(key);
+    const client = this.getClient(key);
+    const sourceBucket = this.getBucketName(source);
     const defaultOptions: ICopyObjectOptions = {};
     const _options = options || defaultOptions;
     const defaultMeta: Map<string, any> = new Map<string, any>();
@@ -209,7 +214,7 @@ export default class OSSClient implements IAWOS {
 
     await retry(
       async () => {
-        await client.copy(key, source, opts);
+        await client.copy(key, source, sourceBucket, opts);
       },
       {
         retries: 3,
@@ -219,12 +224,12 @@ export default class OSSClient implements IAWOS {
   }
 
   public async del(key: string): Promise<void> {
-    const client = this.getBucketName(key);
+    const client = this.getClient(key);
     await client.delete(key);
   }
 
   public async delMulti(keys: string[]): Promise<string[]> {
-    const client = this.getBucketName(keys[0]);
+    const client = this.getClient(keys[0]);
     const r = await client.deleteMulti(keys, { quiet: true });
     return r.deleted ? r.deleted.map(d => d.Key) : [];
   }
@@ -233,7 +238,7 @@ export default class OSSClient implements IAWOS {
     key: string,
     options?: IHeadOptions
   ): Promise<Map<string, string> | null> {
-    const client = this.getBucketName(key);
+    const client = this.getClient(key);
 
     try {
       const res = await client.head(key);
@@ -272,7 +277,7 @@ export default class OSSClient implements IAWOS {
     key: string,
     options?: IListObjectOptions
   ): Promise<string[]> {
-    const client = this.getBucketName(key);
+    const client = this.getClient(key);
 
     const query = defaults({}, options);
     if (options && options.maxKeys) {
@@ -291,7 +296,7 @@ export default class OSSClient implements IAWOS {
     key: string,
     options?: IListObjectV2Options
   ): Promise<string[]> {
-    const client = this.getBucketName(key);
+    const client = this.getClient(key);
 
     const query = defaults({}, options);
     if (options) {
@@ -318,7 +323,7 @@ export default class OSSClient implements IAWOS {
     key: string,
     options?: IListObjectOptions
   ): Promise<IListObjectOutput> {
-    const client = this.getBucketName(key);
+    const client = this.getClient(key);
 
     const query = defaults({}, options);
     if (options && options.maxKeys) {
@@ -349,7 +354,7 @@ export default class OSSClient implements IAWOS {
     key: string,
     options?: IListObjectV2Options
   ): Promise<IListObjectV2Output> {
-    const client = this.getBucketName(key);
+    const client = this.getClient(key);
 
     const query = defaults({}, options);
 
@@ -390,17 +395,31 @@ export default class OSSClient implements IAWOS {
     key: string,
     _options?: ISignatureUrlOptions
   ): Promise<string | null> {
-    const client = this.getBucketName(key);
+    const client = this.getClient(key);
     const options = defaults({}, _options);
     return client.signatureUrl(key, options);
   }
 
-  private getBucketName(key: string): any {
+  private getClient(key: string): any {
     if (this.clients.size === 0) {
       return this.client;
     }
 
     for (const [k, v] of this.clients) {
+      if (k.indexOf(key.slice(-1).toLowerCase()) >= 0) {
+        return v;
+      }
+    }
+
+    throw Error('key not exist in shards bucket!');
+  }
+
+  private getBucketName(key: string): any {
+    if (this.buckets.size === 0) {
+      return this.bucketName;
+    }
+
+    for (const [k, v] of this.buckets) {
       if (k.indexOf(key.slice(-1).toLowerCase()) >= 0) {
         return v;
       }
