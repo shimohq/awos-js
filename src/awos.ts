@@ -1,5 +1,4 @@
 import {
-  IAWOS,
   IGetObjectResponse,
   IListObjectOptions,
   IListObjectV2Options,
@@ -15,25 +14,34 @@ import OSS, { IOSSOptions } from './oss';
 import AWS, { IAWSOptions } from './aws';
 
 import * as _ from 'lodash';
+import { AbstractClient } from './client';
 
 const assert = require('assert');
 
 export interface IOptions {
-  type: string;
-  ossOptions?: IOSSOptions;
-  awsOptions?: IAWSOptions;
+  type: 'oss' | 'aws';
+  prefix?: string;
+  ossOptions?: Exclude<IOSSOptions, 'prefix'>;
+  awsOptions?: Exclude<IAWSOptions, 'prefix'>;
 }
 
-export default class AWOS implements IAWOS {
-  private client: IAWOS;
+export default class AWOS {
+  private client: AbstractClient;
 
   constructor(options: IOptions) {
     assert(options.type, 'options.type is required!');
 
+    const { prefix } = options;
     if (options.type === 'oss' && options.ossOptions) {
-      this.client = new OSS(options.ossOptions);
+      this.client = new OSS({
+        ...options.ossOptions!,
+        prefix,
+      });
     } else if (options.type === 'aws' && options.awsOptions) {
-      this.client = new AWS(options.awsOptions);
+      this.client = new AWS({
+        ...options.awsOptions,
+        prefix,
+      });
     } else {
       throw Error('invalid options!');
     }

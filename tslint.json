@@ -17,7 +17,7 @@
     "no-console": false,
     "no-var-requires": false,
     "prefer-object-spread": false,
-
+    "no-shadowed-variable": false,
     "no-implicit-dependencies": false,
     "no-submodule-imports": false,
     "max-classes-per-file": true

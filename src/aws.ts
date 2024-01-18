@@ -1,6 +1,5 @@
 import AWS = require('aws-sdk');
 import {
-  IAWOS,
   IGetObjectResponse,
   IListObjectOptions,
   IListObjectV2Options,
@@ -13,6 +12,7 @@ import {
   IHeadOptions,
 } from './types';
 import * as _ from 'lodash';
+import { AbstractClient } from './client';
 
 const assert = require('assert');
 const retry = require('async-retry');
@@ -34,17 +34,25 @@ export interface IAWSOptions {
   s3ForcePathStyle?: boolean;
   region?: string;
   signatureVersion?: string;
+  prefix?: string;
   [key: string]: any;
 }
 
 const DefaultSignatureVersion = 'v4';
 
-export default class AWSClient implements IAWOS {
+export default class AWSClient extends AbstractClient {
   private client: AWS.S3;
-  private shardsBucket: Map<string, string> = new Map();
-  private bucket: string;
 
   constructor(options: IAWSOptions) {
+    const bucket =
+      options.shards && options.shards.length
+        ? options.shards
+        : [options.bucket];
+    super({
+      prefix: options.prefix || '',
+      bucket,
+    });
+
     const s3ForcePathStyle = !!options.s3ForcePathStyle;
 
     ['accessKeyId', 'secretAccessKey', 'bucket'].forEach(key => {
@@ -83,23 +91,13 @@ export default class AWSClient implements IAWOS {
       }
       this.client = new AWS.S3(s3Options);
     }
-
-    this.bucket = options.bucket;
-    if (Array.isArray(options.shards) && options.shards.length > 0) {
-      options.shards.forEach((letters: string) => {
-        this.shardsBucket.set(
-          letters,
-          `${options.bucket}-${letters.toLowerCase()}`
-        );
-      });
-    }
   }
 
-  public async get(
+  protected async _get(
     key: string,
     metaKeys: string[]
   ): Promise<IGetObjectResponse | null> {
-    const r = await this._get(key, metaKeys);
+    const r = await this.getWithMetadata(key, metaKeys);
 
     return r && r.content != null
       ? {
@@ -109,11 +107,11 @@ export default class AWSClient implements IAWOS {
       : null;
   }
 
-  public async getAsBuffer(
+  protected async _getAsBuffer(
     key: string,
     metaKeys: string[]
   ): Promise<IGetBufferedObjectResponse | null> {
-    const r = await this._get(key, metaKeys);
+    const r = await this.getWithMetadata(key, metaKeys);
 
     return r && r.content != null
       ? {
@@ -122,7 +120,7 @@ export default class AWSClient implements IAWOS {
       : null;
   }
 
-  public async put(
+  protected async _put(
     key: string,
     data: string | Buffer,
     options?: IPutObjectOptions
@@ -177,7 +175,7 @@ export default class AWSClient implements IAWOS {
     );
   }
 
-  public async copy(
+  protected async _copy(
     key: string,
     source: string,
     options?: ICopyObjectOptions
@@ -233,7 +231,7 @@ export default class AWSClient implements IAWOS {
     );
   }
 
-  public async del(key: string): Promise<void> {
+  protected async _del(key: string): Promise<void> {
     const bucket = this.getBucketName(key);
     const params = {
       Bucket: bucket,
@@ -250,7 +248,7 @@ export default class AWSClient implements IAWOS {
     });
   }
 
-  public async delMulti(keys: string[]): Promise<string[]> {
+  protected async _delMulti(keys: string[]): Promise<string[]> {
     const bucket = this.getBucketName(keys[0]);
     const params = {
       Bucket: bucket,
@@ -272,7 +270,7 @@ export default class AWSClient implements IAWOS {
     });
   }
 
-  public async head(
+  protected async _head(
     key: string,
     options?: IHeadOptions
   ): Promise<Map<string, string> | null> {
@@ -300,7 +298,7 @@ export default class AWSClient implements IAWOS {
         }
         if (options && options.withStandardHeaders) {
           for (const k of Object.keys(STANDARD_HEADERS_KEYMAP)) {
-            if (STANDARD_HEADERS_KEYMAP[k] == 'last-modified') {
+            if (STANDARD_HEADERS_KEYMAP[k] === 'last-modified') {
               meta.set(
                 STANDARD_HEADERS_KEYMAP[k],
                 String(new Date(data[k]).getTime())
@@ -315,7 +313,7 @@ export default class AWSClient implements IAWOS {
     });
   }
 
-  public async listObject(
+  protected async _listObject(
     key: string,
     options?: IListObjectOptions
   ): Promise<string[]> {
@@ -348,7 +346,7 @@ export default class AWSClient implements IAWOS {
     return result.map(o => o.Key);
   }
 
-  public async listObjectV2(
+  protected async _listObjectV2(
     key: string,
     options?: IListObjectV2Options
   ): Promise<string[]> {
@@ -381,12 +379,12 @@ export default class AWSClient implements IAWOS {
     return result.map(o => o.Key);
   }
 
-  public async listDetails(
+  protected async _listDetails(
     key: string,
     options?: IListObjectOptions
   ): Promise<IListObjectOutput> {
     const bucket = this.getBucketName(key);
-    const paramsList: any = {
+    const paramsList: AWS.S3.Types.ListObjectsRequest = {
       Bucket: bucket,
     };
 
@@ -432,12 +430,12 @@ export default class AWSClient implements IAWOS {
     return result;
   }
 
-  public async listDetailsV2(
+  protected async _listDetailsV2(
     key: string,
     options?: IListObjectV2Options
   ): Promise<IListObjectV2Output> {
     const bucket = this.getBucketName(key);
-    const paramsList: any = {
+    const paramsList: AWS.S3.Types.ListObjectsV2Request = {
       Bucket: bucket,
     };
 
@@ -483,7 +481,7 @@ export default class AWSClient implements IAWOS {
     return result;
   }
 
-  public async signatureUrl(
+  protected async _signatureUrl(
     key: string,
     _options?: ISignatureUrlOptions
   ): Promise<string | null> {
@@ -514,21 +512,7 @@ export default class AWSClient implements IAWOS {
     return res;
   }
 
-  private getBucketName(key: string): string {
-    if (this.shardsBucket.size === 0) {
-      return this.bucket;
-    }
-
-    for (const [k, v] of this.shardsBucket) {
-      if (k.indexOf(key.slice(-1).toLowerCase()) >= 0) {
-        return v;
-      }
-    }
-
-    throw Error('key not exist in shards bucket!');
-  }
-
-  private async _get(
+  private async getWithMetadata(
     key: string,
     metaKeys: string[]
   ): Promise<{

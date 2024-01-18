@@ -212,7 +212,7 @@ it.only('should listDetails() works fine', async () => {
 it.only('should listDetailsV2() works fine', async () => {
   const keys = this.keys;
   await Promise.all(
-    keys.map((key) =>
+    keys.map(key =>
       this.oss.put(key, this.content, {
         contentType: this.contentType,
       })

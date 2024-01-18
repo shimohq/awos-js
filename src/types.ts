@@ -21,7 +21,7 @@ export interface IListObjectV2Options {
   prefix?: string;
   delimiter?: string;
   maxKeys?: number;
-  continuationToken: string;
+  continuationToken?: string;
 }
 
 export interface ISignatureUrlOptions {
@@ -75,42 +75,4 @@ export interface IListObjectV2Output {
 
 export interface IHeadOptions {
   withStandardHeaders: boolean;
-}
-
-export interface IAWOS {
-  get(key: string, metaKeys: string[]): Promise<IGetObjectResponse | null>;
-  getAsBuffer(
-    key: string,
-    metaKeys: string[]
-  ): Promise<IGetBufferedObjectResponse | null>;
-  put(
-    key: string,
-    data: string | Buffer,
-    options?: IPutObjectOptions
-  ): Promise<void>;
-  copy(
-    source: string,
-    key: string,
-    options?: ICopyObjectOptions
-  ): Promise<void>;
-  del(key: string): Promise<void>;
-  delMulti(keys: string[]): Promise<string[]>;
-  head(
-    key: string,
-    options?: IHeadOptions
-  ): Promise<Map<string, string> | null>;
-  listObject(key: string, options?: IListObjectOptions): Promise<string[]>;
-  listObjectV2(key: string, options?: IListObjectV2Options): Promise<string[]>;
-  listDetails(
-    key: string,
-    options?: IListObjectOptions
-  ): Promise<IListObjectOutput>;
-  listDetailsV2(
-    key: string,
-    options?: IListObjectV2Options
-  ): Promise<IListObjectV2Output>;
-  signatureUrl(
-    key: string,
-    options?: ISignatureUrlOptions
-  ): Promise<string | null>;
 }

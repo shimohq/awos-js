@@ -2,32 +2,30 @@ import * as http from 'http';
 import * as url from 'url';
 
 import AWS from '../src/aws';
+import { IGetObjectResponse } from '../src/types';
 const _ = require('lodash');
 
-beforeAll(() => {
-  // test with minio
-  this.aws = new AWS({
-    accessKeyId: process.env.AWS_ID,
-    secretAccessKey: process.env.AWS_SECRET,
-    bucket: process.env.AWS_BUCKET,
-    endpoint: process.env.ENDPOINT,
-    s3ForcePathStyle: true,
-  });
-
-  this.key = 'test-awos';
-  this.prefix = 'test-awos-multi';
-  this.keys = _.times(10, (i: number) => `${this.prefix}/${i}/${i}`);
-  this.content = 'hello, awos-js';
-  this.contentType = 'image/jpeg';
+const prefix = 'test-awos-multi';
+const client = new AWS({
+  accessKeyId: process.env.AWS_ID!,
+  secretAccessKey: process.env.AWS_SECRET!,
+  bucket: process.env.AWS_BUCKET!,
+  endpoint: process.env.ENDPOINT,
+  s3ForcePathStyle: true,
+  prefix,
 });
+const key = 'test-awos';
+const keys = _.times(10, (i: number) => `${i}/${i}`);
+const content = 'hello, awos-js';
+const contentType = 'image/jpeg';
 
 it('should put() works fine', async () => {
   const meta = new Map<string, any>();
-  meta.set('length', this.content.length);
+  meta.set('length', content.length);
 
-  await this.aws.put(this.key, this.content, {
+  await client.put(key, content, {
     meta,
-    contentType: this.contentType,
+    contentType: contentType,
   });
 });
 
@@ -39,9 +37,9 @@ it('should put() works fine', async () => {
   const contentEncoding = 'identity';
 
   const meta = new Map<string, any>();
-  meta.set('length', this.content.length);
+  meta.set('length', content.length);
 
-  await this.aws.put(key, this.content, {
+  await client.put(key, content, {
     meta,
     contentType: 'text/plain',
     headers: {
@@ -51,8 +49,8 @@ it('should put() works fine', async () => {
     },
   });
 
-  const signUrl = await this.aws.signatureUrl(key);
-  const parsedUrl = url.parse(signUrl);
+  const signUrl = await client.signatureUrl(key);
+  const parsedUrl = url.parse(signUrl!);
   const resHeaders = await new Promise((resolve, reject) => {
     const req = http.request(
       {
@@ -72,42 +70,42 @@ it('should put() works fine', async () => {
   expect(resHeaders).toHaveProperty('content-disposition');
   expect(resHeaders).toHaveProperty('content-encoding');
 
-  await this.aws.del(key);
+  await client.del(key);
 });
 
 it('should copy() works fine', async () => {
-  const copy = `${this.key}-copy`;
+  const copy = `${key}-copy`;
   const meta = new Map<string, any>();
-  meta.set('length', this.content.length);
+  meta.set('length', content.length);
 
-  await this.aws.put(this.key, this.content, {
+  await client.put(key, content, {
     meta,
-    contentType: this.contentType,
+    contentType: contentType,
   });
-  await this.aws.copy(copy, this.key, { meta, contentType: this.contentType });
-  const s = await this.aws.get(copy, ['length']);
-  expect(s.content).toEqual(this.content);
-  expect(Number(s.meta.get('length'))).toEqual(this.content.length);
-  await this.aws.del(copy);
+  await client.copy(copy, key, { meta, contentType: contentType });
+  const s = await client.get(copy, ['length']);
+  expect(s!.content).toEqual(content);
+  expect(Number(s!.meta.get('length'))).toEqual(content.length);
+  await client.del(copy);
 });
 
 it('should get() works fine', async () => {
-  const res = await this.aws.get(this.key, ['length']);
-  expect(res.content).toEqual(this.content);
-  expect(res.meta.get('length')).toEqual(String(this.content.length));
-  expect(res.headers['content-type']).toEqual(this.contentType);
+  const res = await client.get(key, ['length']) as IGetObjectResponse;
+  expect(res.content).toEqual(content);
+  expect(res.meta.get('length')).toEqual(String(content.length));
+  expect(res.headers['content-type']).toEqual(contentType);
 
-  const res1 = await this.aws.get(this.key + 'abc', ['length']);
+  const res1 = await client.get(key + 'abc', ['length']);
   expect(res1).toEqual(null);
 });
 
 it('should head() works fine', async () => {
-  const res = await this.aws.head(this.key);
-  expect(res.get('length')).toEqual(String(this.content.length));
+  const res = await client.head(key);
+  expect(res!.get('length')).toEqual(String(content.length));
 });
 
 it('should listObject() works fine', async () => {
-  const res = await this.aws.listObject(this.key, {
+  const res = await client.listObject(key, {
     prefix: 'test',
     maxKeys: 5,
   });
@@ -115,7 +113,7 @@ it('should listObject() works fine', async () => {
   expect(res.length).toBeGreaterThanOrEqual(1);
   expect(res.length).toBeLessThanOrEqual(5);
 
-  const notExistPrefixRes = await this.aws.listObject(this.key, {
+  const notExistPrefixRes = await client.listObject(key, {
     prefix: 'test-aaaabbbbccccc',
     maxKeys: 5,
   });
@@ -123,7 +121,7 @@ it('should listObject() works fine', async () => {
 });
 
 it('should listObjectV2() works fine', async () => {
-  const res = await this.aws.listObjectV2(this.key, {
+  const res = await client.listObjectV2(key, {
     prefix: 'test',
     maxKeys: 5,
   });
@@ -131,7 +129,7 @@ it('should listObjectV2() works fine', async () => {
   expect(res.length).toBeGreaterThanOrEqual(1);
   expect(res.length).toBeLessThanOrEqual(5);
 
-  const notExistPrefixRes = await this.aws.listObjectV2(this.key, {
+  const notExistPrefixRes = await client.listObjectV2(key, {
     prefix: 'test-aaaabbbbccccc',
     maxKeys: 5,
   });
@@ -139,46 +137,44 @@ it('should listObjectV2() works fine', async () => {
 });
 
 it('should signatureUrl() works fine', async () => {
-  const res = await this.aws.signatureUrl(this.key);
+  const res = await client.signatureUrl(key);
 
   expect(res).toContain(
-    `${process.env.ENDPOINT}/${process.env.AWS_BUCKET}/${this.key}`
+    `${process.env.ENDPOINT}/${process.env.AWS_BUCKET}/${key}`
   );
 });
 
 it('should delMulti() works fine', async () => {
-  const keys = this.keys;
   await Promise.all(
     keys.slice(0, 5).map(key =>
-      this.aws.put(key, this.content, {
-        contentType: this.contentType,
+      client.put(key, content, {
+        contentType: contentType,
       })
     )
   );
-  const r = await this.aws.delMulti(keys);
+  const r = await client.delMulti(keys);
   expect(r).toEqual([]);
 });
 
 it('should listDetails() works fine', async () => {
-  const keys = this.keys;
   await Promise.all(
     keys.map(key =>
-      this.aws.put(key, this.content, {
-        contentType: this.contentType,
+      client.put(key, content, {
+        contentType: contentType,
       })
     )
   );
   {
-    const res = await this.aws.listDetails(this.key, {
-      prefix: `${this.prefix}/`,
+    const res = await client.listDetails(key, {
+      prefix: `${prefix}/`,
       delimiter: '/',
       maxKeys: 6,
     });
     expect(res.objects.length === 0);
     expect(res.prefixes.length === 6);
     expect(res.isTruncated).toBe(true);
-    const res2 = await this.aws.listDetails(this.key, {
-      prefix: `${this.prefix}/`,
+    const res2 = await client.listDetails(key, {
+      prefix: `${prefix}/`,
       delimiter: '/',
       marker: res.nextMarker,
       maxKeys: 6,
@@ -188,15 +184,15 @@ it('should listDetails() works fine', async () => {
     expect(res2.isTruncated).toBe(false);
   }
   {
-    const res = await this.aws.listDetails(this.key, {
-      prefix: `${this.prefix}/`,
+    const res = await client.listDetails(key, {
+      prefix: `${prefix}/`,
       maxKeys: 6,
     });
     expect(res.objects.length === 6);
     expect(res.prefixes.length === 0);
     expect(res.isTruncated).toBe(true);
-    const res2 = await this.aws.listDetails(this.key, {
-      prefix: `${this.prefix}/`,
+    const res2 = await client.listDetails(key, {
+      prefix: `${prefix}/`,
       marker: res.nextMarker,
       maxKeys: 6,
     });
@@ -207,25 +203,24 @@ it('should listDetails() works fine', async () => {
 }, 10000);
 
 it('should listDetailsV2() works fine', async () => {
-  const keys = this.keys;
   await Promise.all(
-    keys.map((key) =>
-      this.aws.put(key, this.content, {
-        contentType: this.contentType,
+    keys.map(key =>
+      client.put(key, content, {
+        contentType: contentType,
       })
     )
   );
   {
-    const res = await this.aws.listDetailsV2(this.key, {
-      prefix: `${this.prefix}/`,
+    const res = await client.listDetailsV2(key, {
+      prefix: `${prefix}/`,
       delimiter: '/',
       maxKeys: 6,
     });
     expect(res.objects.length === 0);
     expect(res.prefix.length === 6);
     expect(res.isTruncated).toBe(true);
-    const res2 = await this.aws.listDetailsV2(this.key, {
-      prefix: `${this.prefix}/`,
+    const res2 = await client.listDetailsV2(key, {
+      prefix: `${prefix}/`,
       delimiter: '/',
       continuationToken: res.nextContinuationToken,
       maxKeys: 6,
@@ -235,15 +230,15 @@ it('should listDetailsV2() works fine', async () => {
     expect(res2.isTruncated).toBe(false);
   }
   {
-    const res = await this.aws.listDetailsV2(this.key, {
-      prefix: `${this.prefix}/`,
+    const res = await client.listDetailsV2(key, {
+      prefix: `${prefix}/`,
       maxKeys: 6,
     });
     expect(res.objects.length === 6);
     expect(res.prefix.length === 0);
     expect(res.isTruncated).toBe(true);
-    const res2 = await this.aws.listDetailsV2(this.key, {
-      prefix: `${this.prefix}/`,
+    const res2 = await client.listDetailsV2(key, {
+      prefix: `${prefix}/`,
       continuationToken: res.nextContinuationToken,
       maxKeys: 6,
     });
@@ -254,6 +249,6 @@ it('should listDetailsV2() works fine', async () => {
 }, 10000);
 
 afterAll(async () => {
-  await this.aws.del(this.key);
-  await this.aws.delMulti(this.keys);
+  await client.del(key);
+  await client.delMulti(keys);
 });

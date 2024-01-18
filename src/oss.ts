@@ -1,5 +1,5 @@
+import { AbstractClient } from './client';
 import {
-  IAWOS,
   IGetObjectResponse,
   IListObjectOptions,
   IListObjectV2Options,
@@ -31,51 +31,42 @@ export interface IOSSOptions {
   bucket: string;
   endpoint: string;
   shards?: string[];
+  prefix?: string;
   [key: string]: any;
 }
 
-export default class OSSClient implements IAWOS {
-  private client: any;
-  private bucketName: string;
-  private clients: Map<string, any> = new Map();
-  private buckets: Map<string, string> = new Map();
+export default class OSSClient extends AbstractClient {
+  private clients: Map<string, typeof OSS> = new Map(); // <bucketName, AliOSSClient>
   private OSS_META_PREFIX = 'x-oss-meta-';
 
   constructor(options: IOSSOptions) {
+    const bucket = options.shards
+      ? options.shards.map(s => `${options.bucket}-${s.toLowerCase()}`)
+      : [options.bucket];
+    super({ bucket, prefix: options.prefix || '' });
+
     ['accessKeyId', 'accessKeySecret', 'bucket'].forEach(key => {
       assert(options[key], `options.${key} required`);
     });
 
-    if (Array.isArray(options.shards) && options.shards.length > 0) {
-      options.shards.forEach((letters: string) => {
-        const bucket = `${options.bucket}-${letters.toLowerCase()}`;
-        this.clients.set(
-          letters,
-          new OSS({
-            accessKeyId: options.accessKeyId,
-            accessKeySecret: options.accessKeySecret,
-            endpoint: options.endpoint,
-            bucket,
-          })
-        );
-        this.buckets.set(letters, bucket);
-      });
-    } else {
-      this.client = new OSS({
-        accessKeyId: options.accessKeyId,
-        accessKeySecret: options.accessKeySecret,
-        endpoint: options.endpoint,
-        bucket: options.bucket,
-      });
-      this.bucketName = options.bucket;
-    }
+    bucket.forEach(bucket => {
+      this.clients.set(
+        bucket,
+        new OSS({
+          accessKeyId: options.accessKeyId,
+          accessKeySecret: options.accessKeySecret,
+          endpoint: options.endpoint,
+          bucket,
+        })
+      );
+    });
   }
 
-  public async get(
+  protected async _get(
     key: string,
     metaKeys: string[]
   ): Promise<IGetObjectResponse | null> {
-    const r = await this.getAsBuffer(key, metaKeys);
+    const r = await this._getAsBuffer(key, metaKeys);
     return r
       ? {
           ...r,
@@ -84,7 +75,7 @@ export default class OSSClient implements IAWOS {
       : r;
   }
 
-  public async getAsBuffer(
+  protected async _getAsBuffer(
     key: string,
     metaKeys: string[]
   ): Promise<IGetBufferedObjectResponse | null> {
@@ -122,7 +113,7 @@ export default class OSSClient implements IAWOS {
     }
   }
 
-  public async put(
+  protected async _put(
     key: string,
     data: string | Buffer,
     options?: IPutObjectOptions
@@ -173,7 +164,7 @@ export default class OSSClient implements IAWOS {
     );
   }
 
-  public async copy(
+  protected async _copy(
     key: string,
     source: string,
     options?: ICopyObjectOptions
@@ -223,18 +214,18 @@ export default class OSSClient implements IAWOS {
     );
   }
 
-  public async del(key: string): Promise<void> {
+  protected async _del(key: string): Promise<void> {
     const client = this.getClient(key);
     await client.delete(key);
   }
 
-  public async delMulti(keys: string[]): Promise<string[]> {
+  protected async _delMulti(keys: string[]): Promise<string[]> {
     const client = this.getClient(keys[0]);
     const r = await client.deleteMulti(keys, { quiet: true });
     return r.deleted ? r.deleted.map(d => d.Key) : [];
   }
 
-  public async head(
+  protected async _head(
     key: string,
     options?: IHeadOptions
   ): Promise<Map<string, string> | null> {
@@ -254,7 +245,7 @@ export default class OSSClient implements IAWOS {
         }
         if (options && options.withStandardHeaders) {
           for (const k of STANDARD_HEADERS) {
-            if (k == 'last-modified') {
+            if (k === 'last-modified') {
               meta.set(k, String(new Date(res.res.headers[k]).getTime()));
               continue;
             }
@@ -273,7 +264,7 @@ export default class OSSClient implements IAWOS {
     }
   }
 
-  public async listObject(
+  protected async _listObject(
     key: string,
     options?: IListObjectOptions
   ): Promise<string[]> {
@@ -292,7 +283,7 @@ export default class OSSClient implements IAWOS {
     return res.objects ? res.objects.map((o: any) => o.name) : [];
   }
 
-  public async listObjectV2(
+  protected async _listObjectV2(
     key: string,
     options?: IListObjectV2Options
   ): Promise<string[]> {
@@ -304,7 +295,7 @@ export default class OSSClient implements IAWOS {
         query['max-keys'] = options.maxKeys;
       }
       if (options.prefix) {
-        query['prefix'] = options.prefix;
+        query.prefix = options.prefix;
       }
       if (options.continuationToken) {
         query['continuation-token'] = options.continuationToken;
@@ -319,7 +310,7 @@ export default class OSSClient implements IAWOS {
     return res.objects ? res.objects.map((o: any) => o.name) : [];
   }
 
-  public async listDetails(
+  protected async _listDetails(
     key: string,
     options?: IListObjectOptions
   ): Promise<IListObjectOutput> {
@@ -350,7 +341,7 @@ export default class OSSClient implements IAWOS {
     };
   }
 
-  public async listDetailsV2(
+  protected async _listDetailsV2(
     key: string,
     options?: IListObjectV2Options
   ): Promise<IListObjectV2Output> {
@@ -363,7 +354,7 @@ export default class OSSClient implements IAWOS {
         query['max-keys'] = options.maxKeys;
       }
       if (options.prefix) {
-        query['prefix'] = options.prefix;
+        query.prefix = options.prefix;
       }
       if (options.continuationToken) {
         query['continuation-token'] = options.continuationToken;
@@ -391,7 +382,7 @@ export default class OSSClient implements IAWOS {
     };
   }
 
-  public async signatureUrl(
+  protected async _signatureUrl(
     key: string,
     _options?: ISignatureUrlOptions
   ): Promise<string | null> {
@@ -401,30 +392,11 @@ export default class OSSClient implements IAWOS {
   }
 
   private getClient(key: string): any {
-    if (this.clients.size === 0) {
-      return this.client;
+    const bucket = this.getBucketName(key);
+    const client = this.clients.get(bucket);
+    if (!client) {
+      throw Error('key not exist in shards bucket!');
     }
-
-    for (const [k, v] of this.clients) {
-      if (k.indexOf(key.slice(-1).toLowerCase()) >= 0) {
-        return v;
-      }
-    }
-
-    throw Error('key not exist in shards bucket!');
-  }
-
-  private getBucketName(key: string): any {
-    if (this.buckets.size === 0) {
-      return this.bucketName;
-    }
-
-    for (const [k, v] of this.buckets) {
-      if (k.indexOf(key.slice(-1).toLowerCase()) >= 0) {
-        return v;
-      }
-    }
-
-    throw Error('key not exist in shards bucket!');
+    return client;
   }
 }
