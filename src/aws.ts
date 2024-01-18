@@ -137,7 +137,7 @@ export default class AWSClient extends AbstractClient {
     await retry(
       async () => {
         await new Promise<void>((resolve, reject) => {
-          this.client.putObject(params, err => {
+          this.client.putObject(params, (err) => {
             if (err) {
               return reject(err);
             }
@@ -193,7 +193,7 @@ export default class AWSClient extends AbstractClient {
     await retry(
       async () => {
         await new Promise<void>((resolve, reject) => {
-          this.client.copyObject(params, err => {
+          this.client.copyObject(params, (err) => {
             if (err) {
               return reject(err);
             }
@@ -216,7 +216,7 @@ export default class AWSClient extends AbstractClient {
     };
 
     await new Promise<void>((resolve, reject) => {
-      this.client.deleteObject(params, err => {
+      this.client.deleteObject(params, (err) => {
         if (err) {
           return reject(err);
         }
@@ -230,7 +230,7 @@ export default class AWSClient extends AbstractClient {
     const params = {
       Bucket: bucket,
       Delete: {
-        Objects: keys.map(key => ({ Key: key })),
+        Objects: keys.map((key) => ({ Key: key })),
         Quiet: true,
       },
     };
@@ -240,7 +240,9 @@ export default class AWSClient extends AbstractClient {
           reject(err);
         } else {
           resolve(
-            res.Errors ? res.Errors.map(e => e.Key!).filter(k => k != null) : []
+            res.Errors
+              ? res.Errors.map((e) => e.Key!).filter((k) => k != null)
+              : []
           );
         }
       });
@@ -320,7 +322,7 @@ export default class AWSClient extends AbstractClient {
       });
     });
 
-    return result.map(o => o.Key);
+    return result.map((o) => o.Key);
   }
 
   protected async _listObjectV2(
@@ -353,7 +355,7 @@ export default class AWSClient extends AbstractClient {
       });
     });
 
-    return result.map(o => o.Key);
+    return result.map((o) => o.Key);
   }
 
   protected async _listDetails(
@@ -388,7 +390,7 @@ export default class AWSClient extends AbstractClient {
         const result = {
           isTruncated: data.IsTruncated || false,
           objects: data.Contents
-            ? data.Contents.map(o => ({
+            ? data.Contents.map((o) => ({
                 key: o.Key,
                 etag: o.ETag,
                 lastModified: o.LastModified,
@@ -396,7 +398,7 @@ export default class AWSClient extends AbstractClient {
               }))
             : [],
           prefixes: data.CommonPrefixes
-            ? data.CommonPrefixes.map(p => p.Prefix!).filter(p => p != null)
+            ? data.CommonPrefixes.map((p) => p.Prefix!).filter((p) => p != null)
             : [],
           nextMarker: data.NextMarker,
         };
@@ -439,7 +441,7 @@ export default class AWSClient extends AbstractClient {
         const result = {
           isTruncated: data.IsTruncated || false,
           objects: data.Contents
-            ? data.Contents.map(o => ({
+            ? data.Contents.map((o) => ({
                 key: o.Key,
                 etag: o.ETag,
                 lastModified: o.LastModified,
@@ -447,7 +449,7 @@ export default class AWSClient extends AbstractClient {
               }))
             : [],
           prefix: data.CommonPrefixes
-            ? data.CommonPrefixes.map(p => p.Prefix!).filter(p => p != null)
+            ? data.CommonPrefixes.map((p) => p.Prefix!).filter((p) => p != null)
             : [],
           nextContinuationToken: data.NextContinuationToken,
         };

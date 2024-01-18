@@ -60,23 +60,23 @@ export interface ICopyObjectOptions {
 
 export interface IListObjectOutput {
   isTruncated: boolean;
-  objects: Array<{
+  objects: {
     key?: string;
     etag?: string;
     lastModified?: Date;
     size?: number;
-  }>;
+  }[];
   prefixes: string[];
   nextMarker?: string;
 }
 export interface IListObjectV2Output {
   isTruncated: boolean;
-  objects: Array<{
+  objects: {
     key?: string;
     etag?: string;
     lastModified?: Date;
     size?: number;
-  }>;
+  }[];
   nextContinuationToken?: string;
   prefix: string[];
 }

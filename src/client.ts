@@ -32,7 +32,7 @@ export abstract class AbstractClient {
   constructor(options: IAbstractClientOptions) {
     const { bucket, prefix, shards } = options;
     this.shards = shards;
-    this.buckets = shards ? shards.map(s => `${bucket}-${s}`) : [bucket];
+    this.buckets = shards ? shards.map((s) => `${bucket}-${s}`) : [bucket];
     this.prefix = prefix ? normalizeKeyPrefix(prefix) : '';
   }
 
@@ -75,7 +75,7 @@ export abstract class AbstractClient {
   }
 
   public delMulti(keys: string[]): Promise<string[]> {
-    return this._delMulti(keys.map(k => this.getActualKey(k)));
+    return this._delMulti(keys.map((k) => this.getActualKey(k)));
   }
 
   public head(
@@ -89,28 +89,36 @@ export abstract class AbstractClient {
     key: string,
     options?: IListObjectOptions
   ): Promise<string[]> {
-    return this._listObject(this.getActualKey(key), options);
+    const _prefix = options?.prefix;
+    const prefix = _prefix && this.getActualKey(_prefix);
+    return this._listObject(this.getActualKey(key), { ...options, prefix });
   }
 
   public listObjectV2(
     key: string,
     options?: IListObjectV2Options
   ): Promise<string[]> {
-    return this._listObjectV2(this.getActualKey(key), options);
+    const _prefix = options?.prefix;
+    const prefix = _prefix && this.getActualKey(_prefix);
+    return this._listObjectV2(this.getActualKey(key), { ...options, prefix });
   }
 
   public listDetails(
     key: string,
     options?: IListObjectOptions
   ): Promise<IListObjectOutput> {
-    return this._listDetails(this.getActualKey(key), options);
+    const _prefix = options?.prefix;
+    const prefix = _prefix && this.getActualKey(_prefix);
+    return this._listDetails(this.getActualKey(key), { ...options, prefix });
   }
 
   public listDetailsV2(
     key: string,
     options?: IListObjectV2Options
   ): Promise<IListObjectV2Output> {
-    return this._listDetailsV2(this.getActualKey(key), options);
+    const _prefix = options?.prefix;
+    const prefix = _prefix ? this.getActualKey(_prefix) : undefined;
+    return this._listDetailsV2(this.getActualKey(key), { ...options, prefix });
   }
 
   public signatureUrl(
@@ -150,7 +158,7 @@ export abstract class AbstractClient {
       return this.buckets[0];
     }
     const keySuffix = key.slice(-1).toLowerCase();
-    const shardIndex = this.shards.findIndex(s => s.indexOf(keySuffix) > -1);
+    const shardIndex = this.shards.findIndex((s) => s.indexOf(keySuffix) > -1);
     if (!shardIndex) {
       throw Error('key not exist in shards bucket!');
     }

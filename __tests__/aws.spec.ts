@@ -15,7 +15,8 @@ const client = new AWS({
   prefix,
 });
 const key = 'test-awos';
-const keys = _.times(10, (i: number) => `${i}/${i}`);
+const subDir = "multi"
+const keys = _.times(10, (i: number) => `${subDir}/${i}/${i}`);
 const content = 'hello, awos-js';
 const contentType = 'image/jpeg';
 
@@ -59,7 +60,7 @@ it('should put() works fine', async () => {
         method: 'GET',
         port: parsedUrl.port,
       },
-      response => {
+      (response) => {
         resolve(response.headers);
       }
     );
@@ -146,7 +147,7 @@ it('should signatureUrl() works fine', async () => {
 
 it('should delMulti() works fine', async () => {
   await Promise.all(
-    keys.slice(0, 5).map(key =>
+    keys.slice(0, 5).map((key) =>
       client.put(key, content, {
         contentType: contentType,
       })
@@ -158,7 +159,7 @@ it('should delMulti() works fine', async () => {
 
 it('should listDetails() works fine', async () => {
   await Promise.all(
-    keys.map(key =>
+    keys.map((key) =>
       client.put(key, content, {
         contentType: contentType,
       })
@@ -166,7 +167,7 @@ it('should listDetails() works fine', async () => {
   );
   {
     const res = await client.listDetails(key, {
-      prefix: `${prefix}/`,
+      prefix: `${subDir}/`,
       delimiter: '/',
       maxKeys: 6,
     });
@@ -174,7 +175,7 @@ it('should listDetails() works fine', async () => {
     expect(res.prefixes.length === 6);
     expect(res.isTruncated).toBe(true);
     const res2 = await client.listDetails(key, {
-      prefix: `${prefix}/`,
+      prefix: `${subDir}/`,
       delimiter: '/',
       marker: res.nextMarker,
       maxKeys: 6,
@@ -185,14 +186,14 @@ it('should listDetails() works fine', async () => {
   }
   {
     const res = await client.listDetails(key, {
-      prefix: `${prefix}/`,
+      prefix: `${subDir}/`,
       maxKeys: 6,
     });
     expect(res.objects.length === 6);
     expect(res.prefixes.length === 0);
     expect(res.isTruncated).toBe(true);
     const res2 = await client.listDetails(key, {
-      prefix: `${prefix}/`,
+      prefix: `${subDir}/`,
       marker: res.nextMarker,
       maxKeys: 6,
     });
@@ -204,7 +205,7 @@ it('should listDetails() works fine', async () => {
 
 it('should listDetailsV2() works fine', async () => {
   await Promise.all(
-    keys.map(key =>
+    keys.map((key) =>
       client.put(key, content, {
         contentType: contentType,
       })
@@ -212,7 +213,7 @@ it('should listDetailsV2() works fine', async () => {
   );
   {
     const res = await client.listDetailsV2(key, {
-      prefix: `${prefix}/`,
+      prefix: `${subDir}/`,
       delimiter: '/',
       maxKeys: 6,
     });
@@ -220,7 +221,7 @@ it('should listDetailsV2() works fine', async () => {
     expect(res.prefix.length === 6);
     expect(res.isTruncated).toBe(true);
     const res2 = await client.listDetailsV2(key, {
-      prefix: `${prefix}/`,
+      prefix: `${subDir}/`,
       delimiter: '/',
       continuationToken: res.nextContinuationToken,
       maxKeys: 6,
@@ -231,14 +232,14 @@ it('should listDetailsV2() works fine', async () => {
   }
   {
     const res = await client.listDetailsV2(key, {
-      prefix: `${prefix}/`,
+      prefix: `${subDir}/`,
       maxKeys: 6,
     });
     expect(res.objects.length === 6);
     expect(res.prefix.length === 0);
     expect(res.isTruncated).toBe(true);
     const res2 = await client.listDetailsV2(key, {
-      prefix: `${prefix}/`,
+      prefix: `${subDir}/`,
       continuationToken: res.nextContinuationToken,
       maxKeys: 6,
     });

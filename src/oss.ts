@@ -31,7 +31,7 @@ export default class OSSClient extends AbstractClient {
 
   constructor(options: ICommonClientOptions) {
     super(options);
-    this.buckets.forEach(bucket => {
+    this.buckets.forEach((bucket) => {
       this.clients.set(
         bucket,
         new OSS({
@@ -204,7 +204,7 @@ export default class OSSClient extends AbstractClient {
   protected async _delMulti(keys: string[]): Promise<string[]> {
     const client = this.getClient(keys[0]);
     const r = await client.deleteMulti(keys, { quiet: true });
-    return r.deleted ? r.deleted.map(d => d.Key) : [];
+    return r.deleted ? r.deleted.map((d) => d.Key) : [];
   }
 
   protected async _head(
@@ -311,7 +311,7 @@ export default class OSSClient extends AbstractClient {
     return {
       isTruncated: res.isTruncated,
       objects: res.objects
-        ? res.objects.map(o => ({
+        ? res.objects.map((o) => ({
             key: o.name,
             lastModified: o.lastModified,
             etag: o.etag,
@@ -329,8 +329,7 @@ export default class OSSClient extends AbstractClient {
   ): Promise<IListObjectV2Output> {
     const client = this.getClient(key);
 
-    const query = defaults({}, options);
-
+    const query: any = {};
     if (options) {
       if (options.maxKeys) {
         query['max-keys'] = options.maxKeys;
@@ -339,11 +338,11 @@ export default class OSSClient extends AbstractClient {
         query.prefix = options.prefix;
       }
       if (options.continuationToken) {
-        query['continuation-token'] = options.continuationToken;
+        query.marker = options.continuationToken;
       }
     }
 
-    const res = await client.list(query);
+    const res = await client.list(query); // not supportted yet
 
     if (res.res.status !== 200) {
       throw Error(`list oss objects error, res:${JSON.stringify(res)}`);
@@ -352,7 +351,7 @@ export default class OSSClient extends AbstractClient {
     return {
       isTruncated: res.isTruncated,
       objects: res.objects
-        ? res.objects.map(o => ({
+        ? res.objects.map((o) => ({
             key: o.name,
             lastModified: o.lastModified,
             etag: o.etag,
@@ -360,7 +359,7 @@ export default class OSSClient extends AbstractClient {
           }))
         : [],
       prefix: res.prefix || [],
-      nextContinuationToken: res.nextContinuationToken,
+      nextContinuationToken: res.nextMarker,
     };
   }
 
