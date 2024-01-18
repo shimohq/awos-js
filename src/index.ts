@@ -1,44 +1,24 @@
-import AWOS, { IOptions } from './awos';
-import {
-  IGetObjectResponse,
-  IGetBufferedObjectResponse,
-  IListObjectOptions,
-  ISignatureUrlOptions,
-} from './types';
-import OSSClient, { IOSSOptions } from './oss';
-import AWSClient, { IAWSOptions } from './aws';
+import OSSClient from './oss';
+import AWSClient from './aws';
 import { AbstractClient } from './client';
+import { ICommonClientOptions } from './types';
 
-const assert = require('assert');
+export interface IClientOptions extends ICommonClientOptions {
+  storageType: 'oss' | 'aws';
+}
 
-export function build(options: IOptions): AbstractClient {
-  const { prefix } = options;
+export function build(options: IClientOptions): AbstractClient {
+  const { storageType, ...commonOptions } = options;
 
-  switch (options.type) {
+  switch (storageType) {
     case 'oss':
-      assert(options.ossOptions, 'ossOptions is required when type is "oss"');
-      return new OSSClient({
-        ...options.ossOptions!,
-        prefix,
-      });
+      return new OSSClient(commonOptions);
     case 'aws':
-      assert(options.awsOptions, 'awsOptions is required when type is "aws"');
-      return new AWSClient({
-        ...options.awsOptions!,
-        prefix,
-      });
+      return new AWSClient(commonOptions);
     default:
       throw Error('invalid options!');
   }
 }
 
-export {
-  AWOS,
-  IOptions,
-  IGetObjectResponse,
-  IGetBufferedObjectResponse,
-  IListObjectOptions,
-  IOSSOptions,
-  IAWSOptions,
-  ISignatureUrlOptions,
-};
+export * from './types';
+export * from './aws';

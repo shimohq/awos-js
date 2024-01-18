@@ -10,11 +10,11 @@ import {
   IListObjectV2Output,
   ICopyObjectOptions,
   IHeadOptions,
+  ICommonClientOptions,
 } from './types';
 import { defaults } from 'lodash';
 
 const OSS = require('ali-oss');
-const assert = require('assert');
 const retry = require('async-retry');
 
 const STANDARD_HEADERS = [
@@ -25,35 +25,17 @@ const STANDARD_HEADERS = [
   'last-modified',
 ];
 
-export interface IOSSOptions {
-  accessKeyId: string;
-  accessKeySecret: string;
-  bucket: string;
-  endpoint: string;
-  shards?: string[];
-  prefix?: string;
-  [key: string]: any;
-}
-
 export default class OSSClient extends AbstractClient {
   private clients: Map<string, typeof OSS> = new Map(); // <bucketName, AliOSSClient>
   private OSS_META_PREFIX = 'x-oss-meta-';
 
-  constructor(options: IOSSOptions) {
-    const bucket = options.shards
-      ? options.shards.map(s => `${options.bucket}-${s.toLowerCase()}`)
-      : [options.bucket];
-    super({ bucket, prefix: options.prefix || '' });
-
-    ['accessKeyId', 'accessKeySecret', 'bucket'].forEach(key => {
-      assert(options[key], `options.${key} required`);
-    });
-
-    bucket.forEach(bucket => {
+  constructor(options: ICommonClientOptions) {
+    super(options);
+    this.buckets.forEach(bucket => {
       this.clients.set(
         bucket,
         new OSS({
-          accessKeyId: options.accessKeyId,
+          accessKeyId: options.accessKeyID,
           accessKeySecret: options.accessKeySecret,
           endpoint: options.endpoint,
           bucket,

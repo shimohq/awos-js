@@ -11,11 +11,6 @@ import {
   IHeadOptions,
 } from './types';
 
-interface IOptions {
-  bucket: string[];
-  prefix: string;
-}
-
 function normalizeKeyPrefix(prefix: string): string {
   if (prefix.startsWith('/')) {
     return prefix.slice(1);
@@ -23,14 +18,22 @@ function normalizeKeyPrefix(prefix: string): string {
   return prefix;
 }
 
+export interface IAbstractClientOptions {
+  bucket: string;
+  shards?: string[];
+  prefix?: string;
+}
+
 export abstract class AbstractClient {
   protected prefix: string;
-  protected bucket: string[];
+  protected buckets: string[];
+  protected shards?: string[];
 
-  constructor(options: IOptions) {
-    const { bucket, prefix } = options;
-    this.bucket = bucket;
-    this.prefix = normalizeKeyPrefix(prefix);
+  constructor(options: IAbstractClientOptions) {
+    const { bucket, prefix, shards } = options;
+    this.shards = shards;
+    this.buckets = shards ? shards.map(s => `${bucket}-${s}`) : [bucket];
+    this.prefix = prefix ? normalizeKeyPrefix(prefix) : '';
   }
 
   public get(
@@ -143,12 +146,15 @@ export abstract class AbstractClient {
   }
 
   protected getBucketName(key: string): string {
-    if (this.bucket.length === 1) {
-      return this.bucket[0];
+    if (!this.shards) {
+      return this.buckets[0];
     }
-
-    const suffix = key.slice(-1).toLowerCase();
-    const bucket = this.bucket.find(b => b.indexOf(suffix));
+    const keySuffix = key.slice(-1).toLowerCase();
+    const shardIndex = this.shards.findIndex(s => s.indexOf(keySuffix) > -1);
+    if (!shardIndex) {
+      throw Error('key not exist in shards bucket!');
+    }
+    const bucket = this.buckets[shardIndex];
     if (!bucket) {
       throw Error('key not exist in shards bucket!');
     }

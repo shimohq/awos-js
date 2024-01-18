@@ -7,10 +7,10 @@ const _ = require('lodash');
 
 const prefix = 'test-awos-multi';
 const client = new AWS({
-  accessKeyId: process.env.AWS_ID!,
-  secretAccessKey: process.env.AWS_SECRET!,
+  accessKeyID: process.env.AWS_ID!,
+  accessKeySecret: process.env.AWS_SECRET!,
   bucket: process.env.AWS_BUCKET!,
-  endpoint: process.env.ENDPOINT,
+  endpoint: process.env.ENDPOINT!,
   s3ForcePathStyle: true,
   prefix,
 });
@@ -90,7 +90,7 @@ it('should copy() works fine', async () => {
 });
 
 it('should get() works fine', async () => {
-  const res = await client.get(key, ['length']) as IGetObjectResponse;
+  const res = (await client.get(key, ['length'])) as IGetObjectResponse;
   expect(res.content).toEqual(content);
   expect(res.meta.get('length')).toEqual(String(content.length));
   expect(res.headers['content-type']).toEqual(contentType);

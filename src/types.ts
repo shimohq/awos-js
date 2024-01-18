@@ -1,3 +1,11 @@
+import { IAbstractClientOptions } from './client';
+
+export interface ICommonClientOptions extends IAbstractClientOptions {
+  accessKeyID: string;
+  accessKeySecret: string;
+  endpoint: string;
+}
+
 export interface IGetObjectResponse {
   content: string;
   meta: Map<string, string>;

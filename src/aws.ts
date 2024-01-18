@@ -10,6 +10,7 @@ import {
   IListObjectV2Output,
   ICopyObjectOptions,
   IHeadOptions,
+  ICommonClientOptions,
 } from './types';
 import * as _ from 'lodash';
 import { AbstractClient } from './client';
@@ -25,17 +26,11 @@ const STANDARD_HEADERS_KEYMAP = {
   LastModified: 'last-modified',
 };
 
-export interface IAWSOptions {
-  accessKeyId: string;
-  secretAccessKey: string;
-  bucket: string;
-  endpoint?: string;
-  shards?: string[];
+export interface IAWSOptions extends ICommonClientOptions {
   s3ForcePathStyle?: boolean;
   region?: string;
-  signatureVersion?: string;
   prefix?: string;
-  [key: string]: any;
+  signatureVersion?: string;
 }
 
 const DefaultSignatureVersion = 'v4';
@@ -44,53 +39,35 @@ export default class AWSClient extends AbstractClient {
   private client: AWS.S3;
 
   constructor(options: IAWSOptions) {
-    const bucket =
-      options.shards && options.shards.length
-        ? options.shards
-        : [options.bucket];
-    super({
-      prefix: options.prefix || '',
-      bucket,
-    });
+    super(options);
 
+    const awsClientOptions: AWS.S3.Types.ClientConfiguration = {
+      accessKeyId: options.accessKeyID,
+      secretAccessKey: options.accessKeySecret,
+      signatureVersion: options.signatureVersion || DefaultSignatureVersion,
+    };
     const s3ForcePathStyle = !!options.s3ForcePathStyle;
-
-    ['accessKeyId', 'secretAccessKey', 'bucket'].forEach(key => {
-      assert(options[key], `options.${key} required`);
-    });
-
-    // use minio
     if (s3ForcePathStyle) {
+      // minio
       assert(
         options.endpoint,
         'options.endpoint is required when options.s3ForcePathStyle = true'
       );
-      this.client = new AWS.S3({
-        accessKeyId: options.accessKeyId,
-        secretAccessKey: options.secretAccessKey,
-        endpoint: options.endpoint,
-        region: options.region || 'cn-north-1',
-        signatureVersion: options.signatureVersion || DefaultSignatureVersion,
-        s3ForcePathStyle,
-      });
-    }
-    // use aws s3
-    else {
+      awsClientOptions.endpoint = options.endpoint;
+      awsClientOptions.region = options.region || 'cn-north-1';
+      awsClientOptions.s3ForcePathStyle = true;
+    } else {
+      // aws s3
       assert(
         options.region,
         'options.region is required when options.s3ForcePathStyle = false'
       );
-      const s3Options: any = {
-        accessKeyId: options.accessKeyId,
-        secretAccessKey: options.secretAccessKey,
-        region: options.region,
-        signatureVersion: options.signatureVersion || DefaultSignatureVersion,
-      };
+      awsClientOptions.region = options.region;
       if (options.endpoint) {
-        s3Options.endpoint = options.endpoint;
+        awsClientOptions.endpoint = options.endpoint;
       }
-      this.client = new AWS.S3(s3Options);
     }
+    this.client = new AWS.S3(awsClientOptions);
   }
 
   protected async _get(
