@@ -20,5 +20,6 @@ export function build(options: IClientOptions): AbstractClient {
   }
 }
 
+export type Client = AbstractClient;
 export * from './types';
 export * from './aws';
