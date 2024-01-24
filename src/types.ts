@@ -1,3 +1,11 @@
+import { IAbstractClientOptions } from './client';
+
+export interface ICommonClientOptions extends IAbstractClientOptions {
+  accessKeyID: string;
+  accessKeySecret: string;
+  endpoint: string;
+}
+
 export interface IGetObjectResponse {
   content: string;
   meta: Map<string, string>;
@@ -21,7 +29,7 @@ export interface IListObjectV2Options {
   prefix?: string;
   delimiter?: string;
   maxKeys?: number;
-  continuationToken: string;
+  continuationToken?: string;
 }
 
 export interface ISignatureUrlOptions {
@@ -52,65 +60,27 @@ export interface ICopyObjectOptions {
 
 export interface IListObjectOutput {
   isTruncated: boolean;
-  objects: Array<{
+  objects: {
     key?: string;
     etag?: string;
     lastModified?: Date;
     size?: number;
-  }>;
+  }[];
   prefixes: string[];
   nextMarker?: string;
 }
 export interface IListObjectV2Output {
   isTruncated: boolean;
-  objects: Array<{
+  objects: {
     key?: string;
     etag?: string;
     lastModified?: Date;
     size?: number;
-  }>;
+  }[];
   nextContinuationToken?: string;
   prefix: string[];
 }
 
 export interface IHeadOptions {
   withStandardHeaders: boolean;
-}
-
-export interface IAWOS {
-  get(key: string, metaKeys: string[]): Promise<IGetObjectResponse | null>;
-  getAsBuffer(
-    key: string,
-    metaKeys: string[]
-  ): Promise<IGetBufferedObjectResponse | null>;
-  put(
-    key: string,
-    data: string | Buffer,
-    options?: IPutObjectOptions
-  ): Promise<void>;
-  copy(
-    source: string,
-    key: string,
-    options?: ICopyObjectOptions
-  ): Promise<void>;
-  del(key: string): Promise<void>;
-  delMulti(keys: string[]): Promise<string[]>;
-  head(
-    key: string,
-    options?: IHeadOptions
-  ): Promise<Map<string, string> | null>;
-  listObject(key: string, options?: IListObjectOptions): Promise<string[]>;
-  listObjectV2(key: string, options?: IListObjectV2Options): Promise<string[]>;
-  listDetails(
-    key: string,
-    options?: IListObjectOptions
-  ): Promise<IListObjectOutput>;
-  listDetailsV2(
-    key: string,
-    options?: IListObjectV2Options
-  ): Promise<IListObjectV2Output>;
-  signatureUrl(
-    key: string,
-    options?: ISignatureUrlOptions
-  ): Promise<string | null>;
 }

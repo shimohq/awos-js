@@ -32,6 +32,18 @@ const AWOS = require('awos-js')
 ### for Aliyun OSS
 
 ```javascript
+import { build } from 'awos-js'
+
+// for v3.*.*
+const client = build({
+  storageType: 'oss',
+  accessKeyID: "xxx",
+  accessKeySecret: "xxx",
+  bucket: "my_bucket",
+  endpoint: 'endpoint',
+})
+
+// for v2.*.*
 const client = new AWOS.Client({
   type: 'oss',
   ossOptions: {
@@ -43,11 +55,26 @@ const client = new AWOS.Client({
 })
 ```
 
-### for Amazon S3(minio)
+### for AWS-S3 / MINIO
 
 ```javascript
+import { build } from 'awos-js'
+
+// for v3.*.*
+const client = build({
+  storageType: 'aws',
+  accessKeyID: "xxx",
+  accessKeySecret: "xxx",
+  // when use aws s3, endpoint is unnecessary and region must be set
+  endpoint: "https://xxxx.myminio.com",
+  bucket: "my_bucket",
+  // when use minio, S3ForcePathStyle must be set true
+  s3ForcePathStyle: true,
+})
+
+// For v2.*.*
 const client = new AWOS.Client({
-  type: 'aws',
+  storageType: 'aws',
   awsOptions: {
     accessKeyId: 'accessKeyId',
     secretAccessKey: 'secretAccessKey',
@@ -77,6 +104,9 @@ copy(key: string, source: string, options?: ICopyObjectOptions): Promise<void>;
 ```
 
 ### Change Log
+- v3.0.0 / 2024-01-18
+  - **[Breaking]** refactor configuration options ⚠️
+  - support common prefix configuration
 
 - v2.0.0 / 2020-06-18
   - Breaking
@@ -94,6 +124,3 @@ copy(key: string, source: string, options?: ICopyObjectOptions): Promise<void>;
 
 - v1.0.1 / 2019-03-19
   - bug fix: oss listObject() should return [] when options.prefix not exist in the bucket; oss listObject() maxKeys not working
-
-
-
