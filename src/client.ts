@@ -38,14 +38,14 @@ export abstract class AbstractClient {
 
   public get(
     key: string,
-    metaKeys: string[]
+    metaKeys: string[] = []
   ): Promise<IGetObjectResponse | null> {
     return this._get(this.getActualKey(key), metaKeys);
   }
 
   public getAsBuffer(
     key: string,
-    metaKeys: string[]
+    metaKeys: string[] = []
   ): Promise<IGetBufferedObjectResponse | null> {
     return this._getAsBuffer(this.getActualKey(key), metaKeys);
   }

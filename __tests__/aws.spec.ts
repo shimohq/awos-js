@@ -15,7 +15,7 @@ const client = new AWS({
   prefix,
 });
 const key = 'test-awos';
-const subDir = "multi"
+const subDir = 'multi';
 const keys = _.times(10, (i: number) => `${subDir}/${i}/${i}`);
 const content = 'hello, awos-js';
 const contentType = 'image/jpeg';

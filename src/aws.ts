@@ -29,7 +29,6 @@ const STANDARD_HEADERS_KEYMAP = {
 export interface IAWSOptions extends ICommonClientOptions {
   s3ForcePathStyle?: boolean;
   region?: string;
-  prefix?: string;
   signatureVersion?: string;
 }
 

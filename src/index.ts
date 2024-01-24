@@ -1,9 +1,8 @@
 import OSSClient from './oss';
-import AWSClient from './aws';
+import AWSClient, { IAWSOptions } from './aws';
 import { AbstractClient } from './client';
-import { ICommonClientOptions } from './types';
 
-export interface IClientOptions extends ICommonClientOptions {
+export interface IClientOptions extends IAWSOptions {
   storageType: 'oss' | 'aws';
 }
 
