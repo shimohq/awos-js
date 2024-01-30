@@ -157,8 +157,6 @@ export abstract class AbstractClient {
   }
 
   protected async decompress(data: Buffer): Promise<Buffer> {
-    assert(!!this.compressType, 'compress is not enabled');
-
     return new Promise((resolve, reject) => {
       inflate(data, (err, result) => {
         if (err) {
