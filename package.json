@@ -1,6 +1,6 @@
 {
   "name": "awos-js",
-  "version": "3.1.2",
+  "version": "3.1.3",
   "description": "AWOS: Wrapper For OSS And AWS(MINIO) SDK",
   "main": "./lib/index.js",
   "typings": "./lib/index.d.ts",

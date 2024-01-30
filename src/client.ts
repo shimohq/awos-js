@@ -1,4 +1,4 @@
-import { deflate, inflate } from 'node:zlib';
+import { gunzip, gzip } from 'node:zlib';
 import {
   IGetObjectResponse,
   IListObjectOptions,
@@ -146,7 +146,7 @@ export abstract class AbstractClient {
     );
 
     return new Promise((resolve, reject) => {
-      deflate(data, (err, result) => {
+      gzip(data, (err, result) => {
         if (err) {
           reject(err);
         } else {
@@ -158,7 +158,7 @@ export abstract class AbstractClient {
 
   protected async decompress(data: Buffer): Promise<Buffer> {
     return new Promise((resolve, reject) => {
-      inflate(data, (err, result) => {
+      gunzip(data, (err, result) => {
         if (err) {
           reject(err);
         } else {
