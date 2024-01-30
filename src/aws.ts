@@ -74,13 +74,14 @@ export default class AWSClient extends AbstractClient {
     metaKeys: string[]
   ): Promise<IGetObjectResponse | null> {
     const r = await this.getWithMetadata(key, metaKeys);
-
-    return r && r.content != null
-      ? {
-          ...r,
-          content: r.content.toString(),
-        }
-      : null;
+    if (!r || r.content === null) {
+      return null;
+    }
+    const result: IGetObjectResponse = {
+      ...r,
+      content: r.content.toString(),
+    };
+    return result;
   }
 
   protected async _getAsBuffer(
@@ -120,7 +121,6 @@ export default class AWSClient extends AbstractClient {
       Metadata: metaData,
       ContentType: _options.contentType || 'text/plain',
     };
-
     // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property
     const _headers = _options.headers || {};
     if (_headers.cacheControl) {
@@ -129,7 +129,10 @@ export default class AWSClient extends AbstractClient {
     if (_headers.contentDisposition) {
       params.ContentDisposition = _headers.contentDisposition;
     }
-    if (_headers.contentEncoding) {
+    if (this.compressType && data.length >= this.compressLimit) {
+      params.Body = await this.compress(data);
+      params.ContentEncoding = 'gzip';
+    } else if (_headers.contentEncoding) {
       params.ContentEncoding = _headers.contentEncoding;
     }
 
@@ -503,40 +506,54 @@ export default class AWSClient extends AbstractClient {
       Bucket: bucket,
       Key: key,
     };
+    try {
+      const data = await _getObject(this.client, params);
+      const awsResult = data;
+      if (!awsResult) {
+        return null;
+      }
 
-    return new Promise((resolve, reject) => {
-      this.client.getObject(params, (err, data) => {
-        if (err) {
-          if (err.statusCode === 404) {
-            return resolve(null);
-          }
-          return reject(err);
+      const meta = new Map<string, string>();
+      metaKeys.forEach((k: string) => {
+        if (awsResult.Metadata && awsResult.Metadata[k]) {
+          meta.set(k, awsResult.Metadata[k]);
         }
-
-        const awsResult = data;
-
-        if (!awsResult) {
-          return resolve(null);
-        }
-
-        const meta = new Map<string, string>();
-        metaKeys.forEach((k: string) => {
-          if (awsResult.Metadata && awsResult.Metadata[k]) {
-            meta.set(k, awsResult.Metadata[k]);
-          }
-        });
-        const headers = {
-          'content-type': awsResult.ContentType,
-          etag: awsResult.ETag,
-          'content-length': awsResult.ContentLength,
-        };
-
-        resolve({
-          content: awsResult.Body as Buffer,
-          meta,
-          headers,
-        });
       });
-    });
+      const headers = {
+        'content-type': awsResult.ContentType,
+        etag: awsResult.ETag,
+        'content-length': awsResult.ContentLength,
+      };
+
+      const body = awsResult.Body as Buffer;
+      const result = {
+        content: body,
+        meta,
+        headers,
+      };
+      if (data.ContentEncoding?.startsWith('gzip')) {
+        result.content = await this.decompress(body);
+      }
+      return result;
+    } catch (err) {
+      if (err?.statusCode === 404) {
+        return null;
+      }
+      throw err;
+    }
   }
+}
+
+async function _getObject(
+  client: AWS.S3,
+  params: AWS.S3.Types.GetObjectRequest
+): Promise<AWS.S3.GetObjectOutput> {
+  return new Promise((resolve, reject) => {
+    client.getObject(params, (err, data) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(data);
+    });
+  });
 }

@@ -1,3 +1,4 @@
+import { deflate, inflate } from 'node:zlib';
 import {
   IGetObjectResponse,
   IListObjectOptions,
@@ -10,6 +11,7 @@ import {
   ICopyObjectOptions,
   IHeadOptions,
 } from './types';
+import assert = require('node:assert');
 
 function normalizeKeyPrefix(prefix: string): string {
   if (prefix.startsWith('/')) {
@@ -18,22 +20,30 @@ function normalizeKeyPrefix(prefix: string): string {
   return prefix;
 }
 
+export type CompressType = 'gzip';
+
 export interface IAbstractClientOptions {
   bucket: string;
   shards?: string[];
   prefix?: string;
+  compressType?: CompressType;
+  compressLimit?: number;
 }
 
 export abstract class AbstractClient {
   protected prefix: string;
   protected buckets: string[];
+  protected compressLimit: number;
   protected shards?: string[];
+  protected compressType?: CompressType;
 
   constructor(options: IAbstractClientOptions) {
-    const { bucket, prefix, shards } = options;
+    const { bucket, prefix, shards, compressLimit, compressType } = options;
     this.shards = shards;
     this.buckets = shards ? shards.map((s) => `${bucket}-${s}`) : [bucket];
     this.prefix = prefix ? normalizeKeyPrefix(prefix) : '';
+    this.compressType = compressType;
+    this.compressLimit = compressLimit || 0;
   }
 
   public get(
@@ -126,6 +136,35 @@ export abstract class AbstractClient {
     options?: ISignatureUrlOptions
   ): Promise<string | null> {
     return this._signatureUrl(this.getActualKey(key), options);
+  }
+
+  protected async compress(data: string | Buffer): Promise<Buffer> {
+    assert(this.compressLimit, 'compress is not enabled');
+    assert(data.length >= this.compressLimit, 'data size is lower than compress limitation');
+
+    return new Promise((resolve, reject) => {
+      deflate(data, (err, result) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      });
+    });
+  }
+
+  protected async decompress(data: Buffer): Promise<Buffer> {
+    assert(this.compressLimit, 'compress is not enabled');
+  
+    return new Promise((resolve, reject) => {
+      inflate(data, (err, result) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      });
+    });
   }
 
   /**
