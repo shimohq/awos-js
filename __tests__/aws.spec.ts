@@ -13,6 +13,8 @@ const client = new AWS({
   endpoint: process.env.ENDPOINT!,
   s3ForcePathStyle: true,
   prefix,
+  compressType: 'gzip',
+  compressLimit: 0,
 });
 const key = 'test-awos';
 const subDir = 'multi';
@@ -52,7 +54,7 @@ it('should put() works fine', async () => {
 
   const signUrl = await client.signatureUrl(key);
   const parsedUrl = url.parse(signUrl!);
-  const resHeaders = await new Promise((resolve, reject) => {
+  const resHeaders = await new Promise((resolve) => {
     const req = http.request(
       {
         hostname: parsedUrl.hostname,
@@ -83,7 +85,7 @@ it('should copy() works fine', async () => {
     meta,
     contentType: contentType,
   });
-  await client.copy(copy, key, { meta, contentType: contentType });
+  await client.copy(copy, key);
   const s = await client.get(copy, ['length']);
   expect(s!.content).toEqual(content);
   expect(Number(s!.meta.get('length'))).toEqual(content.length);
@@ -248,6 +250,12 @@ it('should listDetailsV2() works fine', async () => {
     expect(res2.isTruncated).toBe(false);
   }
 }, 10000);
+
+it('aws gzip', async () => {
+  await client.put('debug-data', 'hello');
+  const result = await client.get('debug-data');
+  console.log(result?.headers);
+});
 
 afterAll(async () => {
   await client.del(key);
